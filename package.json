@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "description": "learning backend",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js"
   },
   "keywords": [
     "backend"
   ],
   "author": "mihir jan",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.5",
+    "prettier": "^3.3.3"
+  }
 }
