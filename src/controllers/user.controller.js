@@ -1,26 +1,26 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import jwt from "jsonwebtoken"
 import {ApiError} from "../utils/ApiError.js"
 import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const generateAcsessAndRefreshToken = async (userId) =>{
+const generateAccessAndRefereshTokens = async(userId) =>{
     try {
-       const user =  await User.findById(userId)
-       const AcsessToken = user.generateAcsessToken()
-      const RefreshToken = user.generateRefreshToken()
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
 
-      user.refreshToken = RefreshToken
-      await user.save({validateBeforeSave : false})
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
 
-      return {AcsessToken , RefreshToken}
+        return {accessToken, refreshToken}
+
 
     } catch (error) {
-        throw new ApiError(500 , "something went wrong while generating refresh and access token"  )
+        throw new ApiError(500, "Something went wrong while generating referesh and access token")
     }
 }
-
 const registerUser = asyncHandler ( async (req , res)=>{
      // get user details from frontend
     // validation - not empty
@@ -33,6 +33,7 @@ const registerUser = asyncHandler ( async (req , res)=>{
     // return res
     
     console.log( "done")
+    // console.log( req.files )
 
     const { fullName , email , username , password  } = req.body
     if(!fullName){
@@ -43,7 +44,6 @@ const registerUser = asyncHandler ( async (req , res)=>{
     // console.log(fullName);
     // // console.log(fullName , avatar);
     // console.log("email" , email , avatar) ;
-
 
     if( 
         [fullName , email ,username , password ].some( (feild) => 
@@ -61,13 +61,15 @@ const registerUser = asyncHandler ( async (req , res)=>{
         throw new ApiError( 409 ,"user with email or username is already exist" )
     }
 
-    const avatarLocal = req.files?.avatar[0]?.path  
+    const avatarLocal = req.files?.avatar && req.files.avatar[0]?.path
      // const coverImageLocal = req.files?.coverImage[0]?.path
 
-    let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path
-    }
+     let coverImageLocalPath;
+     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+         coverImageLocalPath = req.files.coverImage[0].path;
+     } else {
+         coverImageLocalPath = ""; // or handle missing cover image case
+     }
 
     if( !avatarLocal  ){
         throw new ApiError( 400 , "avatar is required" )
@@ -126,19 +128,21 @@ const loginUser = asyncHandler( async (req , res) => {
         throw new ApiError(401 , "user does not exist"  )
     }
 
+    console.log(user , user._id)
+
     // we have to use "user" that we have found not the "User"
     // beacause we have created pass checker meathod for our own user 
 
     const isPasswordValid = await user.isPasswordCorrect(password)
-
     if( ! isPasswordValid ){
         throw new ApiError(401 , "password is not valid"  )
     }
 
-    const {accessToken , refreshToken} =await generateAcsessAndRefreshToken(user._id)
+    console.log(password)
 
-    const loggedUser = User.findById(user._id)
-    .select( "-password -refreshToken" )
+    const {accessToken , refreshToken} =await generateAccessAndRefereshTokens(user._id)
+
+    const loggedUser = await User.findById(user._id).select("-password -refreshToken")
 
     const options = {
         httpOnly : true , 
@@ -187,9 +191,52 @@ const logoutUser = asyncHandler( async(req , res) => {
 
 } )
 
+
+const refreshAccessToken = asyncHandler( async (req , res) =>{
+
+    const incomingRefreshToken = req.cookies.refreshToken 
+                            || req.body.refreshToken
+
+    if( incomingRefreshToken ){
+        throw new ApiError( 401 , "unauthorized request")
+    }
+
+    try {
+        const decodedToken = jwt.verify( incomingRefreshToken ,process.env.REFRESH_TOKEN_SECRET  )
+    
+        const user = await User.findById(decodedToken?._id)
+    
+        if( !user ){
+            throw new ApiError( 401 , "invalid refresh token")
+        }
+    
+        if( incomingRefreshToken !== user.refreshToken ){
+            throw new ApiError( 401 , "refresh token is expired or used")
+        }
+    
+        const options = {
+            httpOnly : true , 
+            secure : true 
+        } 
+        const {accessToken , newRfreshToken } = await generateAccessAndRefereshTokens(user._id)
+    
+        return res.status(200)
+        .cookie("accessToken" ,accessToken , options )
+        .cookie( "newRfreshToken" , newRfreshToken , options )
+        .json( 
+            new ApiResponse( 200 ,{accessToken , newRfreshToken} ,  "access token erefreshed successfully" )
+         )
+    } catch (error) {
+        throw new ApiError( 401 , error?.message || "invalid refresh token")
+    }
+
+} )
+
+
 export {
     registerUser , 
     loginUser , 
-    logoutUser
+    logoutUser , 
+    refreshAccessToken
 }
 
