@@ -10,9 +10,13 @@ export const verifyJwt = asyncHandler( async (req , res , next) => {
  
       if( ! token ){
          throw new ApiError( 401 , "unauthorized token" )
-      }
+      } 
  
      const decodedToken =  jwt.verify( token , process.env.ACCESS_TOKEN_SECRET )
+
+      //// my comments
+     console.log("this is decoded jwt from authMiddleware...") ; 
+     console.log(decodedToken ) ; 
  
       const user = await User.findById( decodedToken?._id ).select(
          "-password -refreshToken"
@@ -21,7 +25,9 @@ export const verifyJwt = asyncHandler( async (req , res , next) => {
       if( ! user ){
          throw new ApiError(401 , "invalid access token")
       }
- 
+
+      //  Attaches user details (after authentication) to the request object for easy access in 
+      //  subsequent middleware and route handlers.
       req.user = user ; 
       next()
    } catch (error) {
@@ -29,3 +35,4 @@ export const verifyJwt = asyncHandler( async (req , res , next) => {
    }
 
 } )
+
