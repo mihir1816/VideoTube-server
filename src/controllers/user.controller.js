@@ -4,6 +4,8 @@ import {ApiError} from "../utils/ApiError.js"
 import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose , {isValidObjectId} from "mongoose";
+
 
 const generateAccessAndRefereshTokens = async(userId) =>{
     try {
@@ -19,6 +21,7 @@ const generateAccessAndRefereshTokens = async(userId) =>{
         throw new ApiError(500, "Something went wrong while generating referesh and access token")
     }
 }
+
 const registerUser = asyncHandler ( async (req , res)=>{
      // get user details from frontend
     // validation - not empty
@@ -81,7 +84,7 @@ const registerUser = asyncHandler ( async (req , res)=>{
         fullName , 
         avatar : avatar.url , 
         coverImage : coverImage?.url || "" ,
-        email , 
+        email : email.toLowerCase() , 
         password , 
         username : username.toLowerCase()
     })
@@ -101,61 +104,66 @@ const registerUser = asyncHandler ( async (req , res)=>{
 } )
 
 const loginUser = asyncHandler( async (req , res) => {
-    // req body -> data
+   // req body -> data
     // username or email
     //find the user
     //password check
     //access and referesh token
     //send cookie
 
-    const {email , username ,password } = req.body
+    const {email, username, password} = req.body
+    // console.log("email :" + email);
 
-    if( ! email && ! username ){
-        throw new ApiError(400 , "username or email rerquired")
+    if ((!username && !email) || !password) {
+        throw new ApiError(400, "username or email and password is required")
     }
+    
+    // Here is an alternative of above code based on logic discussed in video:
+    // if (!(username || email)) {
+    //     throw new ApiError(400, "username or email is required")    
+    // }
 
     const user = await User.findOne({
-        $or : [{username} , {email}]
+        $or: [{username}, {email}]
     })
 
-    if( ! user ){
-        throw new ApiError(401 , "user does not exist"  )
+    if (!user) {
+        throw new ApiError(404, "User does not exist")
     }
 
-    console.log(user , user._id)
+    console.log("pass 1 :" + password) ; 
 
-    // we have to use "user" that we have found not the "User"
-    // beacause we have created pass checker meathod for our own user 
+   const isPasswordValid = await user.isPasswordCorrect(password)
 
-    const isPasswordValid = await user.isPasswordCorrect(password)
-    if( ! isPasswordValid ){
-        throw new ApiError(401 , "password is not valid"  )
-    }
+   console.log(isPasswordValid) ; 
 
-    console.log(password)
+   if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid user credentials")
+    }  
 
-    const {accessToken , refreshToken} =await generateAccessAndRefereshTokens(user._id)
+   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
 
-    const loggedUser = await User.findById(user._id).select("-password -refreshToken")
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     const options = {
-        httpOnly : true , 
-        secure : true 
-    } 
+        httpOnly: true,
+        secure: true
+    }
 
-    return res.status(201)
-        .cookie("accessToken" , accessToken , options  )
-        .cookie("refreshToken" , refreshToken , options)
-        .json(
-            new ApiResponse(
-                200 , 
-                {
-                    user : loggedUser , accessToken , refreshToken
-                } , 
-                "User logged in successfully"
-            )
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(
+            200, 
+            {
+                user: loggedInUser, accessToken, refreshToken
+            },
+            "User logged In Successfully"
         )
-  } )
+    )
+})
 
 const logoutUser = asyncHandler( async(req , res) => {
 
@@ -184,7 +192,6 @@ const logoutUser = asyncHandler( async(req , res) => {
     )
 
 } )
-
 
 const refreshAccessToken = asyncHandler( async (req , res) =>{
 
@@ -227,7 +234,7 @@ const refreshAccessToken = asyncHandler( async (req , res) =>{
 } )
 
 const changeCurrentPassword =asyncHandler( async (req , res) =>{
-    const {oldPassword , newPassword } = req.body ; 
+    const {oldPassword, newPassword } = req.body ; 
 
     const user = await User.findById(req.user?._id) ; 
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword) ; 
@@ -250,11 +257,17 @@ const changeCurrentPassword =asyncHandler( async (req , res) =>{
 } )
 
 const getCurrentUser = asyncHandler ( async (req , res) =>{
-    return req.status(200).json( 200 , req.user , "current user fetched successfully" )
+    const user = req.user
+    console.log(user)
+    return res.status(200).json( 
+        new ApiResponse(200 , user , "current user fetched successfully")
+     )
 } )
 
 const updateAccountDetails = asyncHandler( async (req , res) =>{
     const { fullName , email  } = req.body ; 
+
+    console.log("email : " + email )
 
     if( !fullName || !email ){
         throw new ApiError( 400 , "all fields are required" )
@@ -306,7 +319,6 @@ const updateUserAvatar = asyncHandler( async(  req , res) =>{
     )
 } )
 
-
 const updateUserCoverImage = asyncHandler( async(  req , res) =>{
     const CoverImageLocalPath = req.file?.path
     if( ! CoverImageLocalPath ){
@@ -337,108 +349,164 @@ const updateUserCoverImage = asyncHandler( async(  req , res) =>{
 
 const getUserChannelProfile = asyncHandler ( async( req , res )=>{
 
-    const {username} = req.params 
+    const {username} = req.params
+    console.log(username)
 
-    if( ! username?.trim() ){
-        throw new ApiError(400 , "username is missing"  )
+    if (!username?.trim()) {
+        throw new ApiError(400, "username is missing")
     }
 
-   const channel = await User.aggregate( 
-        [
-            {
-                $match : {
-                    username : username?.toLowerCase()
-                }
-            } , 
-            {
-                $lookup : {
-                    from : "subscriptions" , 
-                    localField : "_id" , 
-                    foreignField : "channel" , 
-                    as : "subscribers"
-                }
-
-            } ,
-            {
-                $lookup : {
-                    from : "subscriptions" , 
-                    localField : "_id" , 
-                    foreignField : "subscriber" , 
-                    as : "subscribedTo"
-                }
-            } , 
-            {
-                $addFields : {
-                    subscribersCount : {
-                        $size : "$subscribers"
-                    } ,
-                    channelsSubscribedToCount : {
-                        $size : "subscribedTo"
-                    } , 
-                    isSunscribed :{
-                        $cond : {
-                            if : {$in : [req.user?_id , "$subscribers.subscriber"  ]  }, 
-                            then : true , 
-                            else : false 
-                        }
-                    }
-                }
-            } , 
-            {
-                $project : {
-                    fullName : 1 , 
-                    username : 1 , 
-                    subscribersCount : 1 , 
-                    channelsSubscribedToCount : 1 , 
-                    isSunscribed : 1 , 
-                    avater : 1 , 
-                    coverImage : 1 , 
-                    email :1 
-                }
-            }
-        ] 
-    )
-
-    if( ! channel?.length ){
-        throw new ApiError( 404 , "channel does not exist" )
-    }
-
-    return req.
-    status(200)
-    .json(
-        new ApiResponse(200 ,
-                channel[0],
-             "user channel fetched successfully "  )
-    )
-
-} )
-
-const getWatchHistory = asyncHandler(async(req, res) => {
-    const user = await User.aggregate([
+    const channel = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
+                username: username?.toLowerCase()
             }
         },
         {
             $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                username: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1
+
+            }
+        }
+    ])
+
+    if (!channel?.length) {
+        throw new ApiError(404, "channel does not exists")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, channel[0], "User channel fetched successfully")
+    )
+
+} )
+
+///
+// const getWatchHistory = asyncHandler(async(req, res) => {
+
+//     console.log(req.user)
+
+//     const user = await User.aggregate([
+//         {
+//             $match: {
+//                 _id: new mongoose.Types.ObjectId(req.user._id)
+//             }
+//         },
+//         {
+//             $lookup: {
+//                 from: "videos",
+//                 localField: "watchHistory",
+//                 foreignField: "_id",
+//                 as: "watchHistory",
+//                 pipeline: [
+//                     {
+//                         $lookup: {
+//                             from: "users",
+//                             localField: "owner",
+//                             foreignField: "_id",
+//                             as: "owner",
+//                             pipeline: [
+//                                 {
+//                                     $project: {
+//                                         fullName: 1,
+//                                         username: 1,
+//                                         avatar: 1
+//                                     }
+//                                 }
+//                             ]
+//                         }
+//                     },
+//                     {
+//                         $addFields: {
+//                             owner: { $arrayElemAt: ["$owner", 0] }
+//                         }
+//                     }
+//                 ]
+//             }
+//         }
+//     ])
+    
+//     console.log(JSON.stringify(user[0], null, 2)); 
+
+//     return res.status(200).json(new ApiResponse(
+//         200,
+//         user[0].watchHistory,
+//         "Watch history fetched successfully"
+//     ));
+// });
+
+// error 
+const getWatchHistory = asyncHandler( async(req, res) => {
+    // console.log("inside")
+    // console.log(req.user.watchHistory);
+
+    // console.log(req.user._id)
+    const user = await User.aggregate([
+        {
+            $match:{
+                _id: new mongoose.Types.ObjectId(req.user._id),
+            }
+        },
+        {
+            $lookup:{
                 from: "videos",
                 localField: "watchHistory",
-                foreignField: "_id",
+                foreignField : "_id",
                 as: "watchHistory",
-                pipeline: [
+                pipeline:[
                     {
-                        $lookup: {
+                        $lookup:{
                             from: "users",
                             localField: "owner",
                             foreignField: "_id",
-                            as: "owner",
-                            pipeline: [
+                            as  : "owner",
+                            pipeline:[
                                 {
-                                    $project: {
-                                        fullName: 1,
-                                        username: 1,
-                                        avatar: 1
+                                    $project:{
+                                        fullName:1,
+                                        userName: 1,
+                                        avatar:1
                                     }
                                 }
                             ]
@@ -446,9 +514,9 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                     },
                     {
                         $addFields:{
-                            owner:{
-                                $first: "$owner"
-                            }
+                                ownerDetails:{
+                                    $first: "$owner"
+                                }
                         }
                     }
                 ]
@@ -456,17 +524,43 @@ const getWatchHistory = asyncHandler(async(req, res) => {
         }
     ])
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            user[0].watchHistory,
-            "Watch history fetched successfully"
-        )
-    )
+    // console.log(user) ; 
+
+    return res.status(200).json(new ApiResponse(200 , user[0].watchHistory , "watch history fetch succesfully"));
 })
 
+
+const addVideoToWatchHistory = asyncHandler( async(req , res)=>{
+    const {videoId} = req.body ;
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError( 400 , "invalid video object Id" )
+    }
+
+    const isVideoInWatchHistory = req.user?.watchHistory.includes(videoId) ; 
+
+    if( isVideoInWatchHistory ){
+        throw new ApiError( 400 ,"video is already avialable in  watch history"  )
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id , 
+        { 
+            $push: { watchHistory: videoId }
+        }, 
+        {new :true }
+    ).select("-password")  
+
+    if(! user ){
+        throw new ApiError( 400 , "cant find user" ) ; 
+    }
+    
+    return res
+    .json( 
+       new ApiResponse(200 ,user , "video added to watch history successfully"  )
+    )
+
+} )
 
 export {
     registerUser , 
@@ -479,7 +573,8 @@ export {
     updateUserAvatar , 
     updateUserCoverImage , 
     getUserChannelProfile , 
-    getWatchHistory
+    getWatchHistory , 
+    addVideoToWatchHistory
 }
 
 //??????????????? explain pipeline line by line

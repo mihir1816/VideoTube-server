@@ -9,10 +9,8 @@ const healthcheck = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            200 , 
-            {} , 
-            "yes server is healthy..!!"
-        )
+            new ApiResponse(200 , {} , "server is completely healthy...")
+        )   
 })
 
 export {

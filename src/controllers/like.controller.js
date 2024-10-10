@@ -3,13 +3,17 @@ import {Like} from "../models/like.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-import {Video} from "../controllers/video.controller.js"
+import {Video} from "../models/video.model.js"
 import { User } from "../models/user.model.js"
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
     //TODO: toggle like on video
     const currentUser = req.user?._id ; 
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
 
     const alreadyLiked = await Like.findOne({
         $and: [{ likedBy: currentUser }, { video: videoId }]
@@ -18,6 +22,8 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     if( alreadyLiked ){
         // delete that documents
 
+        console.log( "video was liked already" )
+
         await Like.deleteOne( alreadyLiked );
         return res.status(201).json(
             new ApiResponse(200 ,{} , "user unLiked the video successfully")
@@ -25,11 +31,13 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
 
     } else {
 
+        console.log( "video is not liked" )
+
         const likedDocument = await Like.create( {
             video : videoId , 
             likedBy : currentUser , 
-            comment : "" , 
-            tweet : ""
+            comment : null ,   // there was an error when i had written := (comment : "")
+            tweet : null
         })
 
         if( !likedDocument ){
@@ -46,6 +54,11 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params
     //TODO: toggle like on comment
+
+    
+    if (!isValidObjectId(commentId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
 
     const currentUser = req.user?._id ; 
 
@@ -66,8 +79,8 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         const likedDocument = await Like.create( {
             comment : commentId , 
             likedBy : currentUser , 
-            video : "" , 
-            tweet : ""
+            video : null , 
+            tweet : null
         })
 
         if( !likedDocument ){
@@ -86,7 +99,10 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     //TODO: toggle like on twee
-    t
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
+
     const currentUser = req.user?._id ; 
 
     const alreadyLiked = await Like.findOne({
@@ -106,8 +122,8 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
         const likedDocument = await Like.create( {
             tweet : tweetId , 
             likedBy : currentUser , 
-            video : "" , 
-            comment : ""
+            video : null , 
+            comment : null
         })
 
         if( !likedDocument ){
@@ -127,61 +143,36 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 
     const currentUser = req.user?._id ; 
 
-    const likedVD = await User.aggregate([
+    const likedVD = await Like.aggregate([
         {
-            $match: {
-                _id: new mongoose.Types.ObjectId(currentUser)
-            }
+          $match: {
+            likedBy: new mongoose.Types.ObjectId(currentUser),
+            video: { $ne: null } // Ensure only documents with a valid video reference
+          }
         },
         {
-            $lookup: {
-                from: "likes",
-                localField: "_id",
-                foreignField: "likedBy",
-                as: "LikedVideosList",
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "videos",
-                            localField: "video", // local file = like document
-                            foreignField: "_id",
-                            as: "video",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        videoFile: 1,
-                                        thumbnail: 1,
-                                        title: 1,
-                                        description: 1,
-                                        duration: 1,
-                                        views: 1,
-                                        isPublished: 1,
-                                        owner: 1,
-                                        createdAt: 1,
-                                        updatedAt: 1
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        $addFields:{
-                            video:{
-                                $first: "$video"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    ])
+          $lookup: {
+            from: "videos",
+            localField: "video",
+            foreignField: "_id",
+            as: "videoDetails"
+          }
+        },
+        {
+          $addFields: {
+            videoDetails: { $arrayElemAt: ["$videoDetails", 0] }
+          }
+        },
+        
+      ]);   
+      console.log(JSON.stringify(likedVD, null, 2)); // Debugging output   
 
     return res
     .status(200)
     .json(
         new ApiResponse(
             200,
-            likedVD[0].LikedVideosList,
+            likedVD , 
             "Watch history fetched successfully"
         )
     )

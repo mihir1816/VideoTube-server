@@ -5,6 +5,9 @@ import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
+
+
+
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
 
@@ -16,7 +19,7 @@ const createTweet = asyncHandler(async (req, res) => {
 
     const currentUser = req.user?._id
     
-    if( !owner ){
+    if( !currentUser ){
         throw new ApiError( 400 , "invalid authorization" )
     }
 
@@ -37,10 +40,16 @@ const createTweet = asyncHandler(async (req, res) => {
 
 const getUserTweets = asyncHandler(async (req, res) => {
 
+        const { userId } = req.params 
+
+    if (!isValidObjectId(userId)) {
+        throw new ApiError( 400 , "invalid channel object Id" )
+    }
+
     const user = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(userId)
             }
         },
         {
@@ -95,25 +104,45 @@ const getUserTweets = asyncHandler(async (req, res) => {
 const updateTweet = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
     const { newContent } = req.body 
+    console.log("the new content " + newContent)
     //TODO: update tweet
 
-    const tweet = Comment.findByIdAndUpdate( 
-        tweetId , 
-        {
-            $set : {
-                content : newContent
-            }
-        } , 
-        {
-            new : true
-        }
-     )
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
+
+    // getting error in updating by this query.......
+
+    // const tweet = Tweet.findByIdAndUpdate( 
+    //     tweetId ,   
+    //     {
+    //         $set : {
+    //             content : newContent
+    //         }
+    //     } , 
+    //     {
+    //         new : true
+    //     }
+    //  )
+
+    
+    const tweet = await Tweet.findById(tweetId);
+
+    if (!tweet) {
+        throw new ApiError(404, "Cannot find tweet by tweet Id or no valid tweet ID");
+    }
+
+    tweet.content = newContent;
+    const result = await tweet.save({ validateBeforeSave: false })
+
+    if( !result ){
+        throw new ApiError( 500 , "problem while updating tweet" )
+     }
 
     return res.status(200)
     .json( 
-        new ApiResponse(200 ,{} , "tweet updated successfully"  )
+        new ApiResponse(200 , result , "tweet updated successfully"  )
      )
-
 
 })
 
@@ -121,21 +150,26 @@ const deleteTweet = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
     //TODO: delete tweet
 
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
+
     try {
-        const result = await Video.findByIdAndDelete(tweetId);
+        const result = await Tweet.findByIdAndDelete(tweetId);
         if (result) {
           console.log("tweet deleted successfully");
         } else {
           console.log("tweet not found");
         }
-      } catch (err) {
-        throw new ApiError( 400 , "error while deleting tweet" + err )
-      }
-      
-      return res.status(200)
+
+        return res.status(200)
       .json( 
           new ApiResponse(200 , {} , "tweet deleted successfully"  )
        )
+
+      } catch (err) {
+        throw new ApiError( 400 , "error while deleting tweet" + err )
+      }
 
 })
 
