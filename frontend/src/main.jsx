@@ -39,12 +39,15 @@ import MyChannel from "./pages/MyChannel.jsx";
 import History from "./pages/History.jsx";
 import LikedVideos from "./pages/LikedVideos.jsx";
 import Subscribers from "./pages/Subscribers.jsx";
+import AboutSection from './components/AboutSection.jsx'
+import Tweets from './components/Tweets.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
       <Route path="" element={<Home />}>
         <Route path="" element={<Feed />}>
+        <Route path="tweets" element={<Tweets />} /> 
           // Home Page Feed Videos
           <Route path="" element={<FeedVideos />} />
           <Route path="feed/history" element={<History />} />
@@ -56,6 +59,7 @@ const router = createBrowserRouter(
             <Route path="playlists" element={<ChannelPlaylist />} />
             <Route path="tweets" element={<ChannelTweets />} />
             <Route path="subscribed" element={<ChannelSubscribed />} />
+            <Route path="about" element={<AboutSection />} />
           </Route>
           // Owning My Channel
           <Route path="channel/:username" element={<MyChannel />}>
@@ -63,6 +67,7 @@ const router = createBrowserRouter(
             <Route path="tweets" element={<MyChannelTweets />} />
             <Route path="playlists" element={<MyChannelPlaylists />} />
             <Route path="subscribed" element={<MyChannelSubscribed />} />
+            <Route path="about" element={<AboutSection />} />
           </Route>
           //Settings
           <Route path="settings" element={<Settings />}>

@@ -5,21 +5,31 @@ import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { login } from "../../app/Slices/authSlice.js";
 import { Input } from '../Input.jsx';
-import { Button } from '../Botton.jsx'; // Fixing typo from 'Botton' to 'Button'
+import { Button } from '../Botton.jsx'; 
+import { useNavigate, useLocation } from "react-router-dom";
 
 function Login() {
   const [error, setError] = useState("");
   const { register, handleSubmit } = useForm();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/";
+
 
   const loginFun = async (data) => {
     setError("");
     try {
       const result = await dispatch(login(data));
       const user = unwrapResult(result);
-      // Handle user data as needed (e.g., redirecting or updating state)
+      // if (response.payload.token) {
+      //   localStorage.setItem("token", response.payload.token);
+      // }
+      navigate(from, { replace: true });
+      
     } catch (error) {
-      setError(error.message || "Login failed. Please try again.");
+      setError(error.message || "Login failed. Please try again...");
       console.log("login dispatch error: " + error);
     }
   };

@@ -8,7 +8,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // error
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1, query = '', sortBy = 'durationInSeconds', sortType = -1 } = req.query;
+  const  page = 1, limit = 10, sortBy = 'durationInSeconds', sortType = -1 
 
   try {
     const matchStage = {

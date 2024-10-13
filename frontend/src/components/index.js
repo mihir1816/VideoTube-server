@@ -16,7 +16,7 @@ import EmptyPlaylist from "./Playlist/EmptyPlaylist";
 import ChannelPlaylist from "./Playlist/ChannelPlaylist";
 import PlaylistVideos from "./Playlist/PlaylistVideos";
 import EmptyTweet from "./Tweet/EmptyTweet";
-import ChannelTweets from "./Tweet/ChannelTweets";
+import ChannelTweets from './Tweet/ChannelTweets.jsx'
 import ChannelSubscribed from "./Subscription/ChannelSubscribed";
 import EmptySubscription from "./Subscription/EmptySubscription";
 import MyChannelEmptyVideo from "./Channel/MyChannelEmptyVideo";

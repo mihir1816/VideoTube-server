@@ -6,7 +6,19 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
 
-
+const getAllTweets = async (req, res) => {
+    try {
+    
+        const tweets = await Tweet.find().populate('owner', 'username avatar'); 
+  
+      return res.status(201).json(
+        new ApiResponse(200 ,tweets , "all tweets fetched successfully"   )
+      )
+    } catch (error) {
+        console.log("error in fetching tweets" + error) ; 
+        throw new ApiError(500 , "tweets are not fetched") ; 
+    }
+  };
 
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
@@ -177,5 +189,6 @@ export {
     createTweet,
     getUserTweets,
     updateTweet,
-    deleteTweet
+    deleteTweet , 
+    getAllTweets
 }

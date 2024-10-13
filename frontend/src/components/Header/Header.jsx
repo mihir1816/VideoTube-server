@@ -1,7 +1,22 @@
 import React from "react";
 import { Logo } from "../index";
 import { NavLink, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import {selectCurrentUser} from '../../app/Slices/authSlice.js'
+import { logout } from "../../app/Slices/authSlice.js";
+import { useDispatch } from "react-redux";
+
 function Header() {
+
+  const user = useSelector(selectCurrentUser);
+
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/') ; 
+  };
+
   return (
     <header className="sticky inset-x-0 top-0 z-50 w-full border-b border-white bg-[#121212] px-4">
       <nav className="mx-auto flex max-w-7xl items-center py-2">
@@ -125,7 +140,7 @@ function Header() {
               </svg>
             </button>
           </div>
-          <ul className="my-4 flex w-full flex-wrap gap-2 px-4 sm:hidden">
+          {/* <ul className="my-4 flex w-full flex-wrap gap-2 px-4 sm:hidden">
             <li className="w-full">
               <button className="flex w-full items-center justify-start gap-x-4 border border-white px-4 py-1.5 text-left hover:bg-[#ae7aff] hover:text-black focus:border-[#ae7aff] focus:bg-[#ae7aff] focus:text-black">
                 <span className="inline-block w-full max-w-[20px] group-hover:mr-4 lg:mr-4">
@@ -224,19 +239,41 @@ function Header() {
                 <span>Settings</span>
               </button>
             </li>
-          </ul>
-          <div className="mb-8 mt-auto flex w-full flex-wrap gap-4 px-4 sm:mb-0 sm:mt-0 sm:items-center sm:px-0">
-            <Link to={"/login"}>
-              <button className="w-full bg-[#383737] px-3 py-2 hover:bg-[#4f4e4e] sm:w-auto sm:bg-transparent">
-                Log in
-              </button>
-            </Link>
-            <Link to={"/signup"}>
-              <button className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
-                Sign up
-              </button>
-            </Link>
-          </div>
+          </ul> */}
+
+          {
+              user ?
+              <div className="mb-8 mt-auto flex w-full flex-wrap gap-4 px-4 sm:mb-0 sm:mt-0 sm:items-center sm:px-0">
+                  {user && user.avatar && (
+                    <img
+                      src={user.avatar} // Assuming the avatar URL is stored in userData
+                      alt="User Avatar"
+                      className="h-8 w-8 rounded-full mr-2" // Adjust the size and styling as needed
+                    />
+                  )} 
+                  <button 
+                     onClick={handleLogout}
+                  className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
+                    Logout
+                  </button>
+              
+            </div>
+              :
+            <div className="mb-8 mt-auto flex w-full flex-wrap gap-4 px-4 sm:mb-0 sm:mt-0 sm:items-center sm:px-0">
+                <Link to={"/login"} state={{ from: window.location.pathname }} >
+                  <button className="w-full bg-[#383737] px-3 py-2 hover:bg-[#4f4e4e] sm:w-auto sm:bg-transparent">
+                    Log in
+                  </button>
+                </Link>
+                <Link to={"/signup"} state={{ from: window.location.pathname }}>
+                  <button className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
+                    Sign up
+                  </button>
+                </Link>
+            </div>
+          }
+
+  
         </div>
       </nav>
     </header>

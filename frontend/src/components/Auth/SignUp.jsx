@@ -5,19 +5,38 @@ import { useDispatch } from "react-redux";
 import { signup } from "../../app/Slices/authSlice.js"; // Import your signup action
 import { Input } from "../Input.jsx"; // Ensure these components exist
 import { Button } from "../Botton.jsx" // Ensure these components exist
+import { useNavigate, useLocation } from "react-router-dom";
 
 function SignUp() {
   const [error, setError] = useState("");
   const { register, handleSubmit } = useForm();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/";
+  
 
   const signupFun = async (data) => {
+
+      const formData = new FormData();  
+      formData.append("username", data.username);
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+      formData.append("fullName", data.fullName);
+      if (data.avatar[0]) {
+        formData.append("avatar", data.avatar[0]);  
+      }
+      if (data.coverImage[0]) {
+        formData.append("coverImage", data.coverImage[0]);
+      }   
     setError("");
     try {
-      const result = await dispatch(signup(data)); // Adjust this to match your signup action
-      // Handle successful signup (e.g., redirect or show success message)
+      console.log(data) ; 
+      const result = await dispatch(signup(formData)).unwrap();
+      navigate(from, { replace: true }); 
     } catch (error) {
-      setError(error); // Set error message to state
+      setError(error); 
       console.log("Signup dispatch error: " + error);
     }
   };

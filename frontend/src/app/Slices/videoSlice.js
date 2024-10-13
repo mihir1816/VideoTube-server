@@ -7,8 +7,10 @@ import { toast } from "react-toastify";
 const initialState = {
   loading: false,
   status: false,
-  data: null,
+  data: [],
 };
+
+export const selectCurrentVideos = (state) => state.video.data;
 
 export const publishVideo = createAsyncThunk("video/publishVideo", async (data) => {
   try {
@@ -32,17 +34,17 @@ export const getVideo = createAsyncThunk("video/getVideo", async (videoId) => {
   }
 });
 
-export const getAllVideos = createAsyncThunk("video/getAllVideos", async () => {
-  try {
-    // TESTME : Not Implemented
-    const response = await axiosInstance.get(`/videos`);
-    toast.success(response.data.message);
-    return response.data.data;
-  } catch (error) {
-    toast.error(parseErrorMessage(error.response.data));
-    console.log(error);
+export const getAllVideos = createAsyncThunk(
+  "video/getAllVideos",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/api/videos`);
+      return response.data.data; // Assuming this is where the videos are located
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
-});
+);
 
 export const updateVideo = createAsyncThunk("video/updateVideo", async (videoId, data) => {
   try {
@@ -126,6 +128,7 @@ const videoSlice = createSlice({
       state.loading = false;
       state.data = action.payload;
       state.status = true;
+      console.log("videos at builder" , action.payload) ;
     });
     builder.addCase(getAllVideos.rejected, (state) => {
       state.loading = false;

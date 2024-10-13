@@ -77,6 +77,13 @@ function MyChannel() {
               </button>
             </NavLink>
           </li>
+          <li class="w-full">
+              <NavLink to={"about"} activeClassName="active">
+                <button class="w-full border-b-2 border-transparent px-3 py-1.5 text-gray-400 active:border-[#ae7aff] active:bg-white  active:text-[#ae7aff]">
+                  About
+                </button>
+              </NavLink>
+            </li>
         </ul>
         <Outlet />
       </div>

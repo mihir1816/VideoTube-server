@@ -10,9 +10,12 @@ const initialState = {
   userData: null,
 };
 
+export const selectCurrentUser = (state) => state.auth.userData; 
+
+
 export const login = createAsyncThunk("auth/login", async (data) => {
     try {
-      const response = await axiosInstance.post("/users/login", data);
+      const response = await axiosInstance.post("/api/users/login", data);
       toast.success(response.data.message + " 🤩");
       return response.data.data.user;
     } catch (error) {
@@ -23,9 +26,9 @@ export const login = createAsyncThunk("auth/login", async (data) => {
 
 export const signup = createAsyncThunk("auth/signup", async (data) => {
   try {
-    const response = await axiosInstance.post("/users/register", data);
+    const response = await axiosInstance.post("/api/users/register", data);
     toast.success(response.data.message + " 🤩");
-    return response.data.data.user;
+    return response.data.data.user; 
   } catch (error) {
     toast.error(parseErrorMessage(error.response.data));
     console.log(error); 
@@ -34,7 +37,7 @@ export const signup = createAsyncThunk("auth/signup", async (data) => {
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   try {
-    await axiosInstance.post("/users/logout");
+    await axiosInstance.post("/api/users/logout");
     toast.success("Logged out successfully...");
   } catch (error) {
     toast.error(parseErrorMessage(error.response.data));
@@ -113,6 +116,12 @@ export const watchHistory = createAsyncThunk("user/history", async () => {
 const authSlice = createSlice({
   name: "auth",
   initialState,
+  // reducers: {
+  //   setUser(state, action) {
+  //     state.userData = action.payload;
+  //     state.status = true; 
+  //   }
+  // },
   extraReducers: (builder) => {
     //login
     builder.addCase(login.pending, (state) => {
