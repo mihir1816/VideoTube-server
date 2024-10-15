@@ -13,16 +13,47 @@ const initialState = {
 export const selectCurrentUser = (state) => state.auth.userData; 
 
 
-export const login = createAsyncThunk("auth/login", async (data) => {
-    try {
-      const response = await axiosInstance.post("/api/users/login", data);
-      toast.success(response.data.message + " 🤩");
-      return response.data.data.user;
-    } catch (error) {
-      toast.error(parseErrorMessage(error.response.data));
-      console.log(error); 
-    }
+export const login = createAsyncThunk("auth/login", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post("/api/users/login", data);
+    const { accessToken, refreshToken, user } = response.data.data;
+    toast.success(response.data.message + " 🤩");
+    return user;
+  } catch (error) {
+    toast.error(parseErrorMessage(error.response.data));
+    return rejectWithValue(error.response.data);
+  }
 });
+
+// Async thunk to refresh the access token
+// export const refreshAccessToken = createAsyncThunk(
+//   "auth/refresh-token",
+//   async (_, { rejectWithValue }) => {
+//     console.log("step 1 : refreshAccessToken dispatched")
+//     try {
+//       const refreshToken = localStorage.getItem("refreshToken");
+//       if (!refreshToken) {
+//         throw new Error("No refresh token available");
+//       }
+
+//       const response = await axiosInstance.post("/api/users/refresh-token", { refreshToken });
+//       const { accessToken, newRefreshToken, user } = response.data.data;
+      
+//       // Update tokens in localStorage
+//       localStorage.setItem("accessToken", accessToken);
+//       localStorage.setItem("refreshToken", newRefreshToken);
+
+//       toast.success("Token refreshed successfully 🤩");
+//       return user;
+//     } catch (error) {
+//       toast.error(parseErrorMessage(error.response.data));
+//       localStorage.removeItem("accessToken");
+//       localStorage.removeItem("refreshToken");
+//       return rejectWithValue(error.response.data);
+//     }
+//   }
+// );
+
 
 export const signup = createAsyncThunk("auth/signup", async (data) => {
   try {
@@ -41,13 +72,14 @@ export const logout = createAsyncThunk("auth/logout", async () => {
     toast.success("Logged out successfully...");
   } catch (error) {
     toast.error(parseErrorMessage(error.response.data));
-    console.log(error);
   }
 });
 
 export const getCurrentUser = createAsyncThunk("auth/getCurrentUser", async () => {
+  console.log("step 2 : getCurrentUser dispatched")
   try {
-    const response = await axiosInstance.get("/users/get-current-user");
+    const response = await axiosInstance.get("/api/users/current-user");
+    toast.success("get current user successfully...");
     return response.data.data;
   } catch (error) {
     console.error("BACKEND_ERROR :: GET CURRENT USER");
@@ -138,6 +170,8 @@ const authSlice = createSlice({
       state.userData = null;
     });
 
+    
+
     //signup
     builder.addCase(signup.pending, (state) => {
       state.loading = true;
@@ -152,6 +186,8 @@ const authSlice = createSlice({
       state.status = false;
       state.userData = null;
     });
+
+    
 
     //logout
     builder.addCase(logout.pending, (state) => {

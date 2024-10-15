@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 
-function Logo({ width = "w-12" }) {
+function Logo({ width = "w-1" }) {
   return (
     <Link to={"/"}>
       <div className={`mr-4 ${width} shrink-0 sm:w-16`}>

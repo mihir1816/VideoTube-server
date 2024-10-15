@@ -8,18 +8,20 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const getAllTweets = async (req, res) => {
     try {
-    
-        const tweets = await Tweet.find().populate('owner', 'username avatar'); 
+      // Fetch tweets and populate 'owner' fields with 'username' and 'avatar', sorted by createdAt in descending order
+      const tweets = await Tweet.find()
+        .populate('owner', 'username avatar')
+        .sort({ createdAt: -1 }); // Sort by createdAt, newest first
   
-      return res.status(201).json(
-        new ApiResponse(200 ,tweets , "all tweets fetched successfully"   )
-      )
+      return res.status(200).json(
+        new ApiResponse(200, tweets, "All tweets fetched successfully")
+      );
     } catch (error) {
-        console.log("error in fetching tweets" + error) ; 
-        throw new ApiError(500 , "tweets are not fetched") ; 
+      console.log("Error in fetching tweets: " + error);
+      throw new ApiError(500, "Tweets could not be fetched");
     }
   };
-
+  
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
 

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllVideos, selectCurrentVideos } from "../../app/Slices/videoSlice";
-import { unwrapResult } from "@reduxjs/toolkit";import { axiosInstance } from "../../helpers/axios.helper";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { axiosInstance } from "../../helpers/axios.helper";
 import { parseErrorMessage } from "../../helpers/parseErrMsg.helper";
 import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
 
 
 
 function VideoGrid() {
+
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const [videos, setVideos] = useState([])
@@ -56,11 +59,8 @@ function VideoGrid() {
     return `${Math.floor(seconds)} seconds ago`;
   };
 
-  // const videos = useSelector(selectCurrentVideos);
-
-  // if(! Array.isArray(videos)){
-  //   console.log("videos is not an array") ; 
-  // }
+  console.log(videos)
+  
 
   return (
     <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
@@ -70,7 +70,10 @@ function VideoGrid() {
         Array.isArray(videos) &&
           videos.map((video) => (
             <div className="w-full" key={video._id}>
-              <div className="relative mb-2 w-full pt-[56%]">
+
+            <NavLink to={`/video/${video._id}`}>
+              <div 
+              className="relative mb-2 w-full pt-[56%] ">
                 <div className="absolute inset-0">
                   <img
                     src={video.thumbnail}
@@ -82,10 +85,12 @@ function VideoGrid() {
                   {formatDuration(video.duration)}
                 </span>
               </div>
+            </NavLink>
+
               <div className="flex gap-x-2">
                 <div className="h-10 w-10 shrink-0">
                   <img
-                    src="https://images.pexels.com/photos/2519812/pexels-photo-2519812.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                    src={video.owner.avatar}
                     alt="expresslearner"
                     className="h-full w-full rounded-full"
                   />
@@ -95,9 +100,10 @@ function VideoGrid() {
                   <p className="flex text-sm text-gray-200">
                     {video.views} Views · {timeSince(new Date(video.createdAt))}
                   </p>
-                  <p className="text-sm text-gray-200">Express Learner</p>
+                  <p className="text-sm text-gray-200">{video.owner.username}</p>
                 </div>
               </div>
+
             </div>
           ))}
       </div>

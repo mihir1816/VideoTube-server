@@ -8,7 +8,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 // error
 const getAllVideos = asyncHandler(async (req, res) => {
-  const  page = 1, limit = 10, sortBy = 'durationInSeconds', sortType = -1 
+  const page = 1, limit = 10, sortBy = 'durationInSeconds', sortType = -1;
 
   try {
     const matchStage = {
@@ -16,19 +16,21 @@ const getAllVideos = asyncHandler(async (req, res) => {
       isPublished: true
     };
 
-    const aggregateQuery = [
-      { $match: matchStage },
-      { $sort: { [sortBy]: parseInt(sortType), createdAt: -1, title: 1, views: -1 } },
-      { $skip: (page - 1) * limit },
-      { $limit: parseInt(limit) }
-    ];
+    // Define sort options
+    const sortOptions = { [sortBy]: parseInt(sortType), createdAt: -1, title: 1, views: -1 };
 
-    const options = { page, limit };
+    // Find videos with pagination, sorting, and populating owner details
+    const result = await Video.find(matchStage)
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('owner', 'username avatar') // Populate the owner with username and avatar
+      .exec();
 
-    const result = await Video.aggregatePaginate(Video.aggregate(aggregateQuery), options);
+    const totalDocs = await Video.countDocuments(matchStage); // Get total number of documents for pagination
 
     return res.status(200).json(
-      new ApiResponse(200, result, "All videos are loaded successfully")
+      new ApiResponse(200, { docs: result, totalDocs, totalPages: Math.ceil(totalDocs / limit) }, "All videos are loaded successfully")
     );
 
   } catch (error) {
@@ -102,7 +104,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError( 400 , "invalid video object Id" )
   }
 
-  const searchedVideo = await Video.findById(videoId).select("-isPublished");
+  const searchedVideo = await Video.findById(videoId).select("-isPublished").populate('owner', 'username avatar');
 
   if( !searchedVideo ){
     throw new ApiError(400 , "video was not found or doesnt exist")

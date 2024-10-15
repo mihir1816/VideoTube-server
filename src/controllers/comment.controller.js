@@ -6,48 +6,86 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
 
-
+// error
 const getVideoComments = asyncHandler(async (req, res) => {
-    const { videoId } = req.params;
-    const { page = 1, limit = 2 } = req.query; // Default page 1 and limit 10
+  const { videoId } = req.params;
+  const { page = 1, limit = 100 } = req.query; // Default page 1 and limit 2
 
-    // Check if videoId is a valid MongoDB ObjectId
-    if (!isValidObjectId(videoId)) {
-        throw new ApiError(400, "Invalid video object Id");
-    }
+  // Check if videoId is a valid MongoDB ObjectId
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video object Id");
+  }
 
-    try {
-        // Define the aggregation pipeline
-        const aggregationQuery = Comment.aggregate([
-            {
-                $match: {
-                    video: new mongoose.Types.ObjectId(videoId), // Match comments for the given video
-                },
-            },
-            {
-                $sort: {
-                    createdAt: -1, // Sort by newest comments first
-                },
-            },
-        ]);
+  try {
+    const aggregationQuery = Comment.aggregate([
+      {
+        $match: {
+          video: new mongoose.Types.ObjectId(videoId), // Match comments for the given video
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1, // Sort by most recent comments
+        },
+      },
+      // Lookup user information
+      {
+        $lookup: {
+          from: "users", // Collection name of the users
+          localField: "owner", // Field in the Comment collection to join on (assuming `owner` is the user id)
+          foreignField: "_id", // Field in the User collection (primary key)
+          as: "ownerInfo", // Alias for the joined information
+        },
+      },
+      {
+        $unwind: "$ownerInfo", // Unwind the array to access user info as an object
+      },
+      {
+        $project: {
+          content: 1,
+          createdAt: 1,
+          // Include only necessary fields from user
+          "ownerInfo.username": 1,
+          "ownerInfo.avatar": 1,
+          "ownerInfo.fullName": 1,
+        },
+      },
+    ]);
 
-        // Use aggregatePaginate to paginate the results
-        const options = {
-            page: parseInt(page),   // Current page
-            limit: parseInt(limit), // Limit of results per page
-        };
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+    };
 
-        const result = await Comment.aggregatePaginate(aggregationQuery, options);
+    // Use aggregation pagination
+    const result = await Comment.aggregatePaginate(aggregationQuery, options);
 
-        // Send response with paginated comments
-        return res.status(200).json(
-            new ApiResponse(200, result, "All comments are loaded successfully")
-        );
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json(new ApiError(500, "Failed to load comments"));
-    }
+    return res.status(200).json(
+      new ApiResponse(200, result, "All comments are loaded successfully")
+    );
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json(new ApiError(500, "Failed to load comments"));
+  }
 });
+
+
+// const getVideoComments = async (req, res) => {
+//     try {
+//       const { videoId } = req.params; // Assuming you get the videoId from the request parameters
+  
+//       const comments = await Comment.find({ video: videoId }).populate('owner', 'username avatar');
+  
+//       return res.status(200).json(
+//         new ApiResponse(200, comments, "All comments fetched successfully")
+//       );
+//     } catch (error) {
+//       console.error("Error fetching comments:", error); // Use console.error for better error logging
+//       return res.status(500).json(new ApiError(500, "Comments are not fetched"));
+//     }
+//   };
+  
+  
 
 const addComment = asyncHandler(async (req, res) => {
 

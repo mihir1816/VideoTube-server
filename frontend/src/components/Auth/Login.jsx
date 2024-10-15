@@ -7,13 +7,19 @@ import { login } from "../../app/Slices/authSlice.js";
 import { Input } from '../Input.jsx';
 import { Button } from '../Botton.jsx'; 
 import { useNavigate, useLocation } from "react-router-dom";
+import { axiosInstance } from "../../helpers/axios.helper";
+import { toast } from "react-toastify";
+import { parseErrorMessage } from "../../helpers/parseErrMsg.helper";
+
 
 function Login() {
   const [error, setError] = useState("");
   const { register, handleSubmit } = useForm();
-  const dispatch = useDispatch();
+
   const navigate = useNavigate();
   const location = useLocation();
+
+  const dispatch = useDispatch() ; 
 
   const from = location.state?.from?.pathname || "/";
 
@@ -21,18 +27,18 @@ function Login() {
   const loginFun = async (data) => {
     setError("");
     try {
-      const result = await dispatch(login(data));
-      const user = unwrapResult(result);
-      // if (response.payload.token) {
-      //   localStorage.setItem("token", response.payload.token);
-      // }
+      const resultAction = await dispatch(login(data));
+      const user = unwrapResult(resultAction); 
+      toast.success("Logged in successfully 🤩");
       navigate(from, { replace: true });
-      
     } catch (error) {
-      setError(error.message || "Login failed. Please try again...");
-      console.log("login dispatch error: " + error);
+      setError("Login failed");
+      console.log(error);
     }
   };
+  
+
+  
 
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-black">

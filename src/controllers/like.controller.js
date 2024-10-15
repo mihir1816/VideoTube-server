@@ -51,6 +51,29 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     }
 })
 
+const countLikesOnVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    const currentUser = req.user?._id ; 
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
+
+    const alreadyLiked = await Like.findOne({
+        $and: [{ likedBy: currentUser }, { video: videoId }]
+    })
+
+    const likeCount = await Like.countDocuments({ video: videoId });
+
+    return res.status(200)
+    .json({ 
+        count: likeCount , 
+        likeStatus : alreadyLiked
+     });
+});
+
+
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params
     //TODO: toggle like on comment
@@ -96,6 +119,14 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 
 })
 
+const countLikesOnComment = asyncHandler(async (req, res) => {
+    const { commentId } = req.params;
+
+    const likeCount = await Like.countDocuments({ comment: commentId });
+    return res.status(200).json({ count: likeCount });
+});
+
+
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     //TODO: toggle like on twee
@@ -137,6 +168,12 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     }
 }
 )
+const countLikesOnTweet = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params;
+    const likeCount = await Like.countDocuments({ tweet: tweetId });
+    return res.status(200).json({ count: likeCount });
+});
+
 
 const getLikedVideos = asyncHandler(async (req, res) => {
     //TODO: get all liked videos
@@ -184,5 +221,8 @@ export {
     toggleCommentLike,
     toggleTweetLike,
     toggleVideoLike,
-    getLikedVideos
+    getLikedVideos , 
+    countLikesOnVideo , 
+    countLikesOnTweet , 
+    countLikesOnComment
 }

@@ -23,7 +23,7 @@ export const getVideoComments = createAsyncThunk("comment/getVideoComments", asy
 
 export const addComment = createAsyncThunk("comment/addComment", async (videoId, data) => {
   try {
-    const response = await axiosInstance.post(`/comment/add/${videoId}`, data);
+    const response = await axiosInstance.post(`/comments/${videoId}`, data);
     toast.success(response.data.message);
     return response.data.data;
   } catch (error) {
