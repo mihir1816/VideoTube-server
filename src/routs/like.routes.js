@@ -4,9 +4,9 @@ import {
     toggleCommentLike,
     toggleVideoLike,
     toggleTweetLike,
-    // countLikesOnVideo , 
-    // countLikesOnTweet , 
-    // toggleCommentLike
+    countLikesOnVideo , 
+    countLikesOnTweet , 
+    countLikesOnComment
 } from "../controllers/like.controller.js"
 import {verifyJwt} from "../middlewares/auth.middleware.js"
 
@@ -17,8 +17,8 @@ router.route("/toggle/v/:videoId").post(toggleVideoLike);
 router.route("/toggle/c/:commentId").post(toggleCommentLike);
 router.route("/toggle/t/:tweetId").post(toggleTweetLike);
 router.route("/videos").get(getLikedVideos);
-// router.route("/likecount/v/:videoId").get(countLikesOnVideo);
-// router.route("/likecount/c/:commentId").get(countCommentLike);
-// router.route("/likecount/t/:tweetId").get(countLikesOnTweet);
+router.route("/likecount/v/:videoId").get(countLikesOnVideo);
+router.route("/likecount/c/:commentId").get(countLikesOnComment);
+router.route("/likecount/t/:tweetId").get(countLikesOnTweet);
 
 export default router

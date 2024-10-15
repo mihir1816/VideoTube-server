@@ -69,7 +69,7 @@ const countLikesOnVideo = asyncHandler(async (req, res) => {
     return res.status(200)
     .json({ 
         count: likeCount , 
-        likeStatus : alreadyLiked
+        likeStatus : alreadyLiked ? true : false , 
      });
 });
 
@@ -122,8 +122,23 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 const countLikesOnComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
 
+    const currentUser = req.user?._id ; 
+
+    if (!isValidObjectId(commentId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
+
+    const alreadyLiked = await Like.findOne({
+        $and: [{ likedBy: currentUser }, { comment: commentId }]
+    })
+
     const likeCount = await Like.countDocuments({ comment: commentId });
-    return res.status(200).json({ count: likeCount });
+    return res.status(200)
+    .json({ 
+        count: likeCount , 
+        likeStatus : alreadyLiked ? true : false , 
+     });
+
 });
 
 
@@ -168,53 +183,64 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     }
 }
 )
+
 const countLikesOnTweet = asyncHandler(async (req, res) => {
     const { tweetId } = req.params;
-    const likeCount = await Like.countDocuments({ tweet: tweetId });
-    return res.status(200).json({ count: likeCount });
-});
 
+    const currentUser = req.user?._id ; 
+
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError( 400 , "invalid tweet object Id" )
+    }
+
+    const alreadyLiked = await Like.findOne({
+        $and: [{ likedBy: currentUser }, { tweet: tweetId }]
+    })
+
+    const likeCount = await Like.countDocuments({ tweet: tweetId });
+    return res.status(200)
+    .json({ 
+        count: likeCount , 
+        likeStatus : alreadyLiked ? true : false , 
+     });
+});
 
 const getLikedVideos = asyncHandler(async (req, res) => {
     //TODO: get all liked videos
 
-    const currentUser = req.user?._id ; 
+    const currentUser = req.user?._id;
 
-    const likedVD = await Like.aggregate([
-        {
-          $match: {
-            likedBy: new mongoose.Types.ObjectId(currentUser),
-            video: { $ne: null } // Ensure only documents with a valid video reference
-          }
-        },
-        {
-          $lookup: {
-            from: "videos",
-            localField: "video",
-            foreignField: "_id",
-            as: "videoDetails"
-          }
-        },
-        {
-          $addFields: {
-            videoDetails: { $arrayElemAt: ["$videoDetails", 0] }
-          }
-        },
-        
-      ]);   
-      console.log(JSON.stringify(likedVD, null, 2)); // Debugging output   
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            likedVD , 
-            "Watch history fetched successfully"
-        )
-    )
-
+    try {
+      const likedVD = await Like.find({
+        likedBy: currentUser,
+        video: { $ne: null } // Ensure only documents with a valid video reference
+      })
+      .populate({
+        path: 'video', // Populate the `video` field with the video details
+        select: '_id videoFile thumbnail title description duration views createdAt', // Select the video fields you want
+        populate: {
+          path: 'owner', // Assuming the video schema has an `uploadedBy` field for the user
+          select: 'username avatar', // Select user fields like `username` and `avatar`
+        }
+      })
+      .lean(); // Use `lean` to return plain JavaScript objects
     
+      console.log(JSON.stringify(likedVD, null, 2)); // Debugging output
+    
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          likedVD,
+          "Liked videos fetched successfully"
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json(
+        new ApiError(500, "Something went wrong while fetching liked videos")
+      );
+    }
+
 })
 
 export {

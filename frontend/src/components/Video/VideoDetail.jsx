@@ -16,7 +16,6 @@ function VideoDetail() {
   const videoId = path.split("/").pop();
   console.log("step 1 : videoId"); 
   console.log(videoId) ; 
-  
   useEffect(() => {
     const fetchVideoData = async () => {
       try {
@@ -82,6 +81,18 @@ function VideoDetail() {
     const seconds = Math.floor(duration % 60);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
+
+  function formatNumber(num) {
+    if (num >= 1e9) {
+        return (num / 1e9).toFixed(1) + "B"; // Convert to Billion (B)
+    } else if (num >= 1e6) {
+        return (num / 1e6).toFixed(1) + "M"; // Convert to Million (M)
+    } else if (num >= 1e3) {
+        return (num / 1e3).toFixed(1) + "K"; // Convert to Thousand (K)
+    } else {
+        return num.toString(); // Less than 1000, return as is
+    }
+  }
 
   // for number of sub of user 
 
@@ -167,8 +178,8 @@ function VideoDetail() {
           const response = await axiosInstance.get(`/api/likes/likecount/v/${videoId}`);
           toast.success(response.data.message);
           console.log(response);
-          setNoOfLikes(response.data.data.count);
-          setLikeStatus(response.data.data.likeStatus) ; 
+          setNoOfLikes(response.data.count);
+          setLikeStatus(response.data.likeStatus) ; 
         } catch (error) {
           toast.error(parseErrorMessage(error.response.data));
           console.error("Error fetching sub list and count data:", error);
@@ -177,8 +188,7 @@ function VideoDetail() {
 
       const toggleLike = async () => {
           try {
-            console.log("Creating comment with data: " + newComment);
-            const response = await axiosInstance.post(`/api/likes/likecount/v/${videoId}`);
+            const response = await axiosInstance.post(`/api/likes/toggle/v/${videoId}`);
             await fetchnoOfLikes()
             toast.success(response.data.message);
           } catch (error) {
@@ -234,29 +244,32 @@ function VideoDetail() {
                 <div className="flex overflow-hidden rounded-lg border">
                   <button
                     className="group/btn flex items-center gap-x-2 border-r border-gray-700 px-2 py-1 after:content-[attr(data-like)] hover:bg-white/10 focus:after:content-[attr(data-like-alt)]"
+                    onClick={toggleLike}
                   >
                      <span className="inline-block flex items-center gap-x-1 group/btn">
                       <button
-                          onClick={toggleLike}
+                          
                           // className={`flex items-center gap-x-1 ${liked ? 'text-[#ae7aff]' : 'text-gray-500'}`} // Change color based on liked status
                       >
                           <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4" // Set the size of the SVG here
-                              fill="none"
                               viewBox="0 0 24 24"
+                              width="20"
+                              height="20"
+                              fill={likeStatus ? 'red' : 'none'} // Red fill if liked, none if not
                               stroke="currentColor"
-                          >
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ cursor: 'pointer' }}
+                            >
                               <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M14 9V5a1 1 0 00-1-1H9a1 1 0 00-1 1v4m0 0a4 4 0 00-4 4v4a4 4 0 004 4h10a4 4 0 004-4v-4a4 4 0 00-4-4m-6 0h6"
+                                d="M12 21C12 21 4 14.36 4 8.5C4 5.42 6.42 3 9.5 3C11.24 3 12 4 12 4C12 4 12.76 3 14.5 3C17.58 3 20 5.42 20 8.5C20 14.36 12 21 12 21Z"
                               />
-                          </svg>
+                            </svg>
                           
                       </button>
-                      <span className="text-sm">{noOfLikes}</span> {/* Counter for likes */}
+                      <span className="text-sm">{formatNumber(noOfLikes)}</span> {/* Counter for likes */}
                   </span>
                   </button>
                   
