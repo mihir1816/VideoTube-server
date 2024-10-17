@@ -73,7 +73,6 @@ const countLikesOnVideo = asyncHandler(async (req, res) => {
      });
 });
 
-
 const toggleCommentLike = asyncHandler(async (req, res) => {
     const {commentId} = req.params
     //TODO: toggle like on comment
@@ -140,7 +139,6 @@ const countLikesOnComment = asyncHandler(async (req, res) => {
      });
 
 });
-
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
     const {tweetId} = req.params

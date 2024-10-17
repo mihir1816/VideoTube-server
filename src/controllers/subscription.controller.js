@@ -57,22 +57,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         throw new ApiError( 400 , "invalid channel object Id" )
     }
 
-    // const user = await User.aggregate([
-    //     {
-    //         $match: {
-    //             _id: new mongoose.Types.ObjectId(req.user._id)
-    //         }
-    //     },
-    //     {
-    //         $lookup: { 
-    //             from: "subscriptions",
-    //             localField: "channelId",
-    //             foreignField: "channel",
-    //             as: "SubscriberList",
-    //         }
-    //     }
-    // ])
-
     const SubscribeToList = await Subscription.find({ channel: channelId } , 'subscriber')
 
     if (!SubscribeToList) {
@@ -102,21 +86,6 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         throw new ApiError( 400 , "invalid channel object Id" )
     }
 
-    // const user = await User.aggregate([
-    //     {
-    //         $match: {
-    //             _id: new mongoose.Types.ObjectId(req.user._id)
-    //         }
-    //     },
-    //     {
-    //         $lookup: {
-    //             from: "subscriptions",
-    //             localField: "subscriberId",
-    //             foreignField: "subscriber",
-    //             as: "SubscribeToList",
-    //         }
-    //     }
-    // ])
 
    // by this line you will get only id of channel ..
    const SubscribeToList = await Subscription.find({ subscriber: subscriberId } , 'channel')
@@ -140,8 +109,30 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
 
 })
 
+const getsubscribeStatus = asyncHandler(async (req, res) => {
+    const userId = req.user._id;  
+    const { channelId } = req.body; 
+         
+        const subscription = await Subscription.findOne({
+            subscriber: userId,
+            channel: channelId
+        });
+
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {alreadySubscribed : subscription ? true : false} ,
+                "channel subscription status fetched successfully"
+            )
+        )  
+    
+});
+
 export {
     toggleSubscription,
     getUserChannelSubscribers,
-    getSubscribedChannels
+    getSubscribedChannels ,
+    getsubscribeStatus
 }

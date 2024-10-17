@@ -65,14 +65,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
   const videoOwner = req.user?._id;
 
   const durationInSeconds = video?.duration;
-  // const hours = Math.floor(seconds / 3600);
-  // const minutes = Math.floor((seconds % 3600) / 60);
-  // const secs = seconds % 60;
-  // const duration = [
-  //     hours.toString().padStart(2, '0'),
-  //     minutes.toString().padStart(2, '0'),
-  //     secs.toString().padStart(2, '0')
-  // ].join(':') ;
 
   const newVideo = await Video.create({
     videoFile: video?.url,
@@ -160,7 +152,6 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: delete video
 
   if (!isValidObjectId(videoId)) {
     throw new ApiError( 400 , "invalid video object Id" )

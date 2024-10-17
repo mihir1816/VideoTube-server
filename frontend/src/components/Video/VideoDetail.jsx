@@ -8,54 +8,104 @@ import { NavLink } from "react-router-dom";
 
 function VideoDetail() {
 
-
-  // for playing video
-  const [playingVideo, setPlayingVideo] = useState({});
   const location = useLocation();
   const path = location.pathname;
   const videoId = path.split("/").pop();
-  console.log("step 1 : videoId"); 
-  console.log(videoId) ; 
-  useEffect(() => {
-    const fetchVideoData = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/videos/${videoId}`);
-        toast.success(response.data.message);
-        console.log("this is responce");
-        console.log(response);
-        setPlayingVideo(response.data.data);
-      } catch (error) {
-        toast.error(parseErrorMessage(error.response.data));
-        console.error("Error fetching video data:", error);
+
+  const [playingVideo, setPlayingVideo] = useState({});
+  const [ownerId, setOwnerId] = useState(null);
+  
+  // For number of subscribers of user
+  const [noOfSubscribers, setNoOfSubscribers] = useState(510);
+  
+  
+  // Function to fetch number of subscribers
+  const fetchNoOfSub = async () => {
+    try {
+      if (!ownerId) {
+        console.error("Owner ID is not available.");
+        return;
       }
-    };
+      const response = await axiosInstance.get(`/api/subscriptions/c/${ownerId}`);
+      setNoOfSubscribers(response.data.data.length);
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error(parseErrorMessage(error?.response?.data));
+      console.error("Error fetching sub list and count data:", error);
+    }
+  };
+  
+  // Function to fetch video data and ownerId
+  const fetchVideoData = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/videos/${videoId}`);
+      setPlayingVideo(response.data.data);
+      setOwnerId(response?.data?.data?.owner?._id);
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error(parseErrorMessage(error.response.data));
+      console.error("Error fetching video data:", error);
+    }
+  };
+  
+   // For subscription status
+   const [subStatus, setSubStatus] = useState(true);
+  // Function to fetch subscription status
+  const fetchSubStatus = async () => {
+    try {
+      if (!ownerId) {
+        console.error("Owner ID is not available for fetching subscription status.");
+        return;
+      }
+      const response = await axiosInstance.get(`/api/subscriptions/subStatus`, {
+         channelId: ownerId 
+      });
+      setSubStatus(response.data.data.alreadySubscribed);
+      console.log(response.data.data.alreadySubscribed ) ; 
+      console.log(response ) ;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error fetching subscription status';
+      toast.error(errorMessage);
+      console.error("Error fetching subscription status:", error);
+    }
+  };
+
+  useEffect(() => {
+    console.log('subStatus updated:', subStatus);  // Check if subStatus is being updated correctly
+  }, [subStatus]);
+  
+  
+  // Function to toggle subscription
+  const toggleSub = async () => {
+    try {
+      const response = await axiosInstance.post(`/api/subscriptions/t/${ownerId}`);
+      await fetchSubStatus() ;
+      await fetchNoOfSub();
+      toast.success(response.data.message);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Unable to toggle subscription. Please try again.';
+      toast.error(errorMessage);
+      console.error("Error toggling subscription:", error);
+    }
+  };
+  
+  // useEffect to fetch video data
+  useEffect(() => {
     fetchVideoData();
   }, [videoId]);
+  
+  // useEffect to fetch the subscriber count and subStatus after ownerId is available
+  useEffect(() => {
+    if (ownerId) {
+      fetchNoOfSub();  
+      fetchSubStatus();  // Pass ownerId directly to ensure it's available when called
+    }
+  }, [ownerId]);  // Trigger this useEffect when ownerId changes
+  
 
-   console.log("this is playing video ");
-  console.log(playingVideo);
-
-  const timeSince = (date) => {
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-
-    let interval = Math.floor(seconds / 31536000);
-    if (interval > 1) return `${interval} years ago`;
-
-    interval = Math.floor(seconds / 2592000);
-    if (interval > 1) return `${interval} months ago`;
-
-    interval = Math.floor(seconds / 86400);
-    if (interval > 1) return `${interval} days ago`;
-
-    interval = Math.floor(seconds / 3600);
-    if (interval > 1) return `${interval} hours ago`;
-
-    interval = Math.floor(seconds / 60);
-    if (interval > 1) return `${interval} minutes ago`;
-
-    return `${Math.floor(seconds)} seconds ago`;
-  };
+      
+      
+      
 
   // for side videos 
   const [videos, setVideos] = useState([]);
@@ -81,7 +131,27 @@ function VideoDetail() {
     const seconds = Math.floor(duration % 60);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
+  const timeSince = (date) => {
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
 
+    let interval = Math.floor(seconds / 31536000);
+    if (interval > 1) return `${interval} years ago`;
+
+    interval = Math.floor(seconds / 2592000);
+    if (interval > 1) return `${interval} months ago`;
+
+    interval = Math.floor(seconds / 86400);
+    if (interval > 1) return `${interval} days ago`;
+
+    interval = Math.floor(seconds / 3600);
+    if (interval > 1) return `${interval} hours ago`;
+
+    interval = Math.floor(seconds / 60);
+    if (interval > 1) return `${interval} minutes ago`;
+
+    return `${Math.floor(seconds)} seconds ago`;
+  };
   function formatNumber(num) {
     if (num >= 1e9) {
         return (num / 1e9).toFixed(1) + "B"; // Convert to Billion (B)
@@ -94,32 +164,12 @@ function VideoDetail() {
     }
   }
 
-  // for number of sub of user 
-
-  const [noOfSubscribers, setNoOfSubscribers] = useState(510)
-
-  useEffect(() => {
-    const fetchNoOfSub = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/subscriptions/c/${playingVideo.owner._id}`);
-        toast.success(response.data.message);
-        console.log("this is responce");
-        console.log(response.data.data);
-        setNoOfSubscribers(response.data.data.length);
-      } catch (error) {
-        toast.error(parseErrorMessage(error.response.data));
-        console.error("Error fetching sub list and count data:", error);
-      }
-    };
-    fetchNoOfSub();
-  }, [videoId]);
+  
 
   // to add comment on video 
-
-        const [newComment, setNewComment] = useState("");
+      const [newComment, setNewComment] = useState("");
       const [allComments, setAllComments] = useState([]);
       const [noOfComment, setNoOfComment] = useState(0);
-
       // Function to load all comments for the video
       const renderComments = async () => {
         try {
@@ -134,7 +184,7 @@ function VideoDetail() {
         }
       };
 
-      // Add comment function
+  // Add comment function
       const addComment = async () => {
         if (newComment.trim()) {
           try {
@@ -153,39 +203,28 @@ function VideoDetail() {
         } else {
           toast.error("Add some text to comment");
         }
-      };
-
-      // Load comments on component mount or when videoId changes
-      useEffect(() => {
+      }; 
+      useEffect(() => {    // Load comments on component mount or when videoId changes
         renderComments(); // Initial load of comments
       }, [videoId]);
-
-      // for pagination of commments 
-      // const [currentPage, setCurrentPage] = useState(1); // Track current page
-      // const handlePageChange = (page) => {
-      //   setCurrentPage(page);
-      // };
-
 
 
       // for like count 
 
       const [noOfLikes, setNoOfLikes] = useState(0)
       const [likeStatus, setLikeStatus] = useState(false)
-
       const fetchnoOfLikes= async () => {
         try {
           const response = await axiosInstance.get(`/api/likes/likecount/v/${videoId}`);
           toast.success(response.data.message);
-          console.log(response);
-          setNoOfLikes(response.data.count);
+          console.log(response); 
+          setNoOfLikes(response.data.count); 
           setLikeStatus(response.data.likeStatus) ; 
         } catch (error) {
-          toast.error(parseErrorMessage(error.response.data));
+          toast.error(parseErrorMessage(error.response.data)); 
           console.error("Error fetching sub list and count data:", error);
         }
       };
-
       const toggleLike = async () => {
           try {
             const response = await axiosInstance.post(`/api/likes/toggle/v/${videoId}`);
@@ -197,10 +236,17 @@ function VideoDetail() {
             console.error('Error posting comment:', error);
           }
       };
-
       useEffect(() => {
         fetchnoOfLikes();
       }, [videoId]);
+
+      
+       
+
+
+
+
+  
 
  
   return (
@@ -312,15 +358,31 @@ function VideoDetail() {
                 </div>
               </div>
               <div className="block">
-                <button className="group/btn mr-1 flex w-full items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
-                  <span className="inline-block w-5">
-                    {/* Subscribe button SVG */}
-                  </span>
-                  <span className="group-focus/btn:hidden">Subscribe</span>
-                  <span className="hidden group-focus/btn:block">
-                    Subscribed
-                  </span>
-                </button>
+
+              <button
+                className={`group/btn mr-1 flex w-full items-center gap-x-2 
+                  bg-[${subStatus ? '#ae7aff' : '#ff4f4f'}]  
+                  text-[${subStatus ? '#000' : '#fff'}]       
+                  px-1.5 py-1 text-center font-bold 
+                  shadow-[5px_5px_0px_0px_#4f4e4e] transition-all 
+                  duration-150 ease-in-out 
+                  group-hover:bg-[${subStatus ? '#9a63ff' : '#e63939'}] 
+                  active:translate-x-[5px] active:translate-y-[5px] 
+                  active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto`}
+                onClick={toggleSub}
+              >
+                <span className="inline-block w-5">
+                </span>
+                <span className={`${subStatus ? 'hidden' : 'block'} `}>
+                  Subscribe
+                </span>
+                <span className={`${subStatus ? 'block' : 'hidden'}`}>
+                  Unsubscribed
+                </span>
+              </button>
+
+
+
               </div>
             </div>
 

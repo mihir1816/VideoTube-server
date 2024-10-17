@@ -22,3 +22,4 @@ router.route("/likecount/c/:commentId").get(countLikesOnComment);
 router.route("/likecount/t/:tweetId").get(countLikesOnTweet);
 
 export default router
+

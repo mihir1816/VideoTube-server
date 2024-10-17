@@ -72,26 +72,25 @@ function LikedVideos() {
     return `${Math.floor(seconds)} seconds ago`;
   };
 
-
   return (
     <section class="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
       <div class="flex flex-col gap-4 p-4">
 
 
       {videos && videos.map((video) => (
-        <NavLink to={`/video/${video.video._id}`}>
+        <NavLink to={`/video/${video?.video?._id}`}>
         <div key={video._id} className="w-full max-w-3xl gap-x-4 md:flex">
         <div className="relative mb-2 w-full md:mb-0 md:w-5/12">
           <div className="w-full pt-[56%]">
             <div className="absolute inset-0">
               <img
-                src={video.video.thumbnail}
-                alt={video.video.title}
+                src={video?.video?.thumbnail}
+                alt={video?.video?.title}
                 className="h-full w-full object-cover"
               />
             </div>
             <span className="absolute bottom-1 right-1 inline-block rounded bg-black px-1.5 text-sm">
-              {formatDuration(video.video.duration)}
+              {formatDuration(video?.video?.duration)}
             </span>
           </div>
         </div>
@@ -104,9 +103,9 @@ function LikedVideos() {
             />
           </div>
           <div className="w-full">
-            <h6 className="mb-1 font-semibold md:max-w-[75%]">{video.video.title}</h6>
+            <h6 className="mb-1 font-semibold md:max-w-[75%]">{video?.video?.title}</h6>
             <p className="flex text-sm text-gray-200 sm:mt-3">
-              {formatNumber(video.video.views)} Views · {timeSince(new Date(video.video.createdAt))}
+              {formatNumber(video?.video?.views)} Views · {timeSince(new Date(video?.video?.createdAt))}
             </p>
             <div className="flex items-center gap-x-4">
               <div className="mt-2 hidden h-10 w-10 shrink-0 md:block">

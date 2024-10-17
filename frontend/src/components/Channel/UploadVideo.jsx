@@ -1,75 +1,140 @@
 import React from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import { axiosInstance } from "../../helpers/axios.helper";
+import { parseErrorMessage } from "../../helpers/parseErrMsg.helper";
 
-function UploadVideo() {
+function UploadVideo({ onClose, onUpdateSuccess }) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const publishVideo = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("videoFile", data.videoFile[0]);
+      formData.append("thumbnail", data.thumbnail[0]);
+
+      const response = await axiosInstance.post("/api/videos/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success(response.data.message);
+      onClose();
+      if (onUpdateSuccess) {
+        onUpdateSuccess();
+      }
+    } catch (error) {
+      toast.error(parseErrorMessage(error?.response?.data || "An unexpected error occurred"));
+      console.error("Error uploading video:", error);
+    }
+  };
+
   return (
-    <div className="absolute inset-0 z-10 bg-black/50 px-4 pb-[86px] pt-4 sm:px-14 sm:py-8">
-      <div className="h-fit overflow-auto border bg-[#121212]">
-        <div className="flex items-center justify-between border-b p-4">
-          <h2 className="text-xl font-semibold">Upload Videos</h2>
-          <button className="group/btn mr-1 flex w-auto items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e]">
-            Save
-          </button>
-        </div>
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-y-4 p-4">
-          <div className="w-full border-2 border-dashed px-4 py-12 text-center">
-            <span className="mb-4 inline-block w-24 rounded-full bg-[#E4D3FF] p-4 text-[#AE7AFF]">
+    <div className="relative flex min-h-[calc(100vh-66px)] sm:min-h-[calc(100vh-82px)]">
+      <div className="fixed inset-0 top-[calc(66px)] z-10 flex flex-col bg-black/50 px-4 pb-[86px] pt-4 sm:top-[calc(82px)] sm:px-14 sm:py-8">
+        <div className="mx-auto w-full max-w-lg overflow-auto rounded-lg border border-gray-700 bg-[#121212] p-4">
+          <div className="mb-4 flex items-start justify-between">
+            <h2 className="text-xl font-semibold">
+              Publish Video
+              <span className="block text-sm text-gray-300">
+                Upload and share your video content.
+              </span>
+            </h2>
+            <button className="h-6 w-6" onClick={onClose}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke-width="1.5"
+                strokeWidth="1.5"
                 stroke="currentColor"
                 aria-hidden="true"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                ></path>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </span>
-            <h6 className="mb-2 font-semibold">Drag and drop video files to upload</h6>
-            <p className="text-gray-400">Your videos will be private untill you publish them.</p>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit(publishVideo)}>
+            {/* Thumbnail Field */}
+            <label htmlFor="thumbnail" className="mb-1 inline-block">
+              Thumbnail<sup>*</sup>
+            </label>
             <label
-              for="upload-video"
-              className="group/btn mt-4 inline-flex w-auto cursor-pointer items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e]"
+              className="relative mb-4 block cursor-pointer border border-dashed p-2 after:absolute after:inset-0 after:bg-transparent hover:after:bg-black/10"
+              htmlFor="thumbnail"
             >
-              <input type="file" id="upload-video" className="sr-only" />
-              Select Files
+              <input
+                type="file"
+                id="thumbnail"
+                className="sr-only"
+                {...register("thumbnail", { required: "Please upload a thumbnail" })}
+              />
+              <img
+                src="https://via.placeholder.com/300x150.png?text=Thumbnail+Placeholder"
+                alt="Upload Thumbnail"
+              />
             </label>
-          </div>
-          <div className="w-full">
-            <label for="thumbnail" className="mb-1 inline-block">
-              Thumbnail
-              <sup>*</sup>
-            </label>
-            <input
-              id="thumbnail"
-              type="file"
-              className="w-full border p-1 file:mr-4 file:border-none file:bg-[#ae7aff] file:px-3 file:py-1.5"
-            />
-          </div>
-          <div className="w-full">
-            <label for="title" className="mb-1 inline-block">
-              Title
-              <sup>*</sup>
-            </label>
-            <input
-              id="title"
-              type="text"
-              className="w-full border bg-transparent px-2 py-1 outline-none"
-            />
-          </div>
-          <div className="w-full">
-            <label for="desc" className="mb-1 inline-block">
-              Description
-              <sup>*</sup>
-            </label>
-            <textarea
-              id="desc"
-              className="h-40 w-full resize-none border bg-transparent px-2 py-1 outline-none"
-            ></textarea>
-          </div>
+            {errors.thumbnail && <p className="text-red-500">{errors.thumbnail.message}</p>}
+
+            {/* Video File Field */}
+            <div className="mb-6">
+              <label htmlFor="videoFile" className="mb-1 inline-block">
+                Video File<sup>*</sup>
+              </label>
+              <input
+                id="videoFile"
+                type="file"
+                className="w-full border bg-transparent p-2"
+                {...register("videoFile", { required: "Please upload a video file" })}
+              />
+              {errors.videoFile && <p className="text-red-500">{errors.videoFile.message}</p>}
+            </div>
+
+            {/* Title Field */}
+            <div className="mb-6">
+              <label htmlFor="title" className="mb-1 inline-block">
+                Title<sup>*</sup>
+              </label>
+              <input
+                id="title"
+                type="text"
+                className="w-full border bg-transparent px-2 py-1 outline-none"
+                placeholder="Enter the title of the video"
+                {...register("title", { required: "Title is required" })}
+              />
+              {errors.title && <p className="text-red-500">{errors.title.message}</p>}
+            </div>
+
+            {/* Description Field */}
+            <div className="mb-6">
+              <label htmlFor="description" className="mb-1 inline-block">
+                Description<sup>*</sup>
+              </label>
+              <textarea
+                id="description"
+                className="h-40 w-full resize-none border bg-transparent px-2 py-1 outline-none"
+                placeholder="Enter the description of the video"
+                {...register("description", { required: "Description is required" })}
+              ></textarea>
+              {errors.description && <p className="text-red-500">{errors.description.message}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button className="border px-4 py-3" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="bg-[#ae7aff] px-4 py-3 text-black">
+                Publish
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

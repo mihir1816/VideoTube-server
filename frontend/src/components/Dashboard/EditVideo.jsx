@@ -1,6 +1,37 @@
 import React from "react";
+import { axiosInstance } from "../../helpers/axios.helper.js";
+import { parseErrorMessage } from "../../helpers/parseErrMsg.helper";
+import { toast } from "react-toastify";
+import { useForm } from "react-hook-form"; 
 
-function EditVideo() {
+function EditVideo({ videoId, onClose , onUpdateSuccess }) {
+
+
+ const {
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+  } = useForm();
+
+  const updateVideo = async (data) => {
+    try {
+      console.log(data) ;
+      const response = await axiosInstance.patch(`/api/videos/${videoId}`, {
+        title: data.title, 
+        description: data.description,
+      });
+      toast.success(response.data.message);
+      onClose(); 
+      if (onUpdateSuccess) {
+        onUpdateSuccess(); // Call the function to reload the videos
+      }
+    } catch (error) {
+      toast.error(parseErrorMessage(error?.response?.data || "An unexpected error occurred"));
+      console.error("Error updating video:", error);
+    }
+  };
+
+
   return (
     <div className="relative flex min-h-[calc(100vh-66px)] sm:min-h-[calc(100vh-82px)]">
       <div className="fixed inset-0 top-[calc(66px)] z-10 flex flex-col bg-black/50 px-4 pb-[86px] pt-4 sm:top-[calc(82px)] sm:px-14 sm:py-8">
@@ -12,76 +43,91 @@ function EditVideo() {
                 Share where you&#x27;ve worked on your profile.
               </span>
             </h2>
-            <button className="h-6 w-6">
+            <button className="h-6 w-6"
+            onClick={onClose}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke-width="1.5"
+                strokeWidth="1.5"
                 stroke="currentColor"
                 aria-hidden="true"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   d="M6 18L18 6M6 6l12 12"
                 ></path>
               </svg>
             </button>
           </div>
-          <label for="thumbnail" className="mb-1 inline-block">
-            Thumbnail
-            <sup>*</sup>
-          </label>
-          <label
-            className="relative mb-4 block cursor-pointer border border-dashed p-2 after:absolute after:inset-0 after:bg-transparent hover:after:bg-black/10"
-            for="thumbnail"
-          >
-            <input type="file" className="sr-only" id="thumbnail" />
-            <img
-              src="https://images.pexels.com/photos/7775641/pexels-photo-7775641.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-              alt="State Management with Redux"
-            />
-          </label>
-          <div className="mb-6 flex flex-col gap-y-4">
-            <div className="w-full">
-              <label for="title" className="mb-1 inline-block">
-                Title
-                <sup>*</sup>
-              </label>
-              <input
-                id="title"
-                type="text"
-                className="w-full border bg-transparent px-2 py-1 outline-none"
-                value="State Management with Redux"
+
+        <form onSubmit={handleSubmit(updateVideo)}>
+            <label for="thumbnail" className="mb-1 inline-block">
+              Thumbnail
+              <sup>*</sup>
+            </label>
+            <label
+              className="relative mb-4 block cursor-pointer border border-dashed p-2 after:absolute after:inset-0 after:bg-transparent hover:after:bg-black/10"
+              htmlFor="thumbnail"
+            >
+              <input type="file" className="sr-only" id="thumbnail" />
+              <img
+                src="https://images.pexels.com/photos/7775641/pexels-photo-7775641.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                alt="State Management with Redux"
               />
+            </label>
+            <div className="mb-6 flex flex-col gap-y-4">
+              <div className="w-full">
+                <label htmlFor="title" className="mb-1 inline-block">
+                  Title
+                  <sup>*</sup>
+                </label>
+                <input
+                  id="title"
+                  type="text"
+                  className="w-full border bg-transparent px-2 py-1 outline-none"
+                  placeholder="Enter title of the video"
+                {...register("title")}
+                />
+              </div>
+              <div className="w-full">
+                <label htmlFor="desc" className="mb-1 inline-block">
+                  Description
+                  <sup>*</sup>
+                </label>
+                <textarea
+                  id="desc"
+                  className="h-40 w-full resize-none border bg-transparent px-2 py-1 outline-none"
+                  placeholder="Enter title of the video"
+                  {...register("description")}
+                >
+                </textarea>
+
+                
+
+                {errors.description && (
+                    <p className="text-red-500">{errors.description.message}</p>
+                  )}
+
+              </div>
             </div>
-            <div className="w-full">
-              <label for="desc" className="mb-1 inline-block">
-                Description
-                <sup>*</sup>
-              </label>
-              <textarea
-                id="desc"
-                className="h-40 w-full resize-none border bg-transparent px-2 py-1 outline-none"
-              >
-                State Management with Redux is a comprehensive guidebook that delves into the
-                principles and practices of managing application state in JavaScript-based web
-                development. It explores the Redux library, a popular tool for handling state in
-                complex applications, providing practical insights and best practices for
-                effectively managing data flow. This book equips developers with the knowledge and
-                skills needed to architect robust and maintainable front-end applications, making it
-                an essential resource for anyone seeking to master state management in modern web
-                development.
-              </textarea>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="border px-4 py-3">Cancel</button>
-            <button className="bg-[#ae7aff] px-4 py-3 text-black disabled:bg-[#E4D3FF]">
-              Update
+
+            <div className="grid grid-cols-2 gap-4">
+            <button className="border px-4 py-3"
+            onClick={onClose}
+            >Cancel</button>
+            <button type="submit" className="bg-[#ae7aff] px-4 py-3 text-black disabled:bg-[#E4D3FF]"> 
+                Update
             </button>
           </div>
+
+          </form>
+
+          
+
+
         </div>
       </div>
     </div>

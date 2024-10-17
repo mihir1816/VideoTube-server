@@ -4,23 +4,41 @@ import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-
+import {Like} from "../models/like.model.js"
 
 const getAllTweets = async (req, res) => {
     try {
+      const userId = req.user._id; // Assuming req.user is the authenticated user
+  
       // Fetch tweets and populate 'owner' fields with 'username' and 'avatar', sorted by createdAt in descending order
       const tweets = await Tweet.find()
         .populate('owner', 'username avatar')
-        .sort({ createdAt: -1 }); // Sort by createdAt, newest first
+        .sort({ createdAt: -1 });
+  
+     
+      const tweetIds = tweets.map(tweet => tweet._id);
+  
+      const likes = await Like.find({
+        tweet: { $in: tweetIds },
+        likedBy: userId
+      }).select('tweet'); 
+     
+      const likedTweetIds = new Set(likes.map(like => like.tweet.toString()));
+  
+      const tweetsWithLikeStatus = tweets.map(tweet => ({
+        ...tweet.toObject(),
+        liked: likedTweetIds.has(tweet._id.toString())
+      }));
   
       return res.status(200).json(
-        new ApiResponse(200, tweets, "All tweets fetched successfully")
+        new ApiResponse(200, tweetsWithLikeStatus, "All tweets fetched successfully")
       );
     } catch (error) {
       console.log("Error in fetching tweets: " + error);
       throw new ApiError(500, "Tweets could not be fetched");
     }
   };
+  
   
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet

@@ -90,17 +90,29 @@ const getChannelVideos = asyncHandler(async (req, res) => {
     const channelId = req.user?._id ; 
 
     const channelOwner =await User.findOne( channelId )
+
     if( !channelOwner ){
         throw new ApiError( 400 ,"invalid channel id" )
     }
 
-    // use pipeline or directly by find (array)
-
-    const allVideos = await Video.find({
-        owner : channelId
-    })
-
-    console.log(allVideos)
+    const allVideos = await Video.aggregate([
+        { 
+          $match: { owner: channelId } 
+        },
+        {
+          $lookup: {
+            from: "likes", 
+            localField: "_id", 
+            foreignField: "video", 
+            as: "likes" 
+          }
+        },
+        {
+          $addFields: {
+            totalLikes: { $size: "$likes" }
+          }
+        }
+      ]);
 
     return res.status(201).json(
         new ApiResponse(200 ,allVideos , "all videos fetched successfully"   )
