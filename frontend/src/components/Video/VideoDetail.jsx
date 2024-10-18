@@ -47,6 +47,20 @@ function VideoDetail() {
       console.error("Error fetching video data:", error);
     }
   };
+
+  //for adding view
+  const addview = async (videoId) => {
+    try {
+      const response = await axiosInstance.patch(`/api/videos/add/view/${videoId}`);   
+      toast.success(response.data.message);   
+      await renderVideo() ;  
+    } catch (error) {
+      const errorMessage = error.response ? error.response.data : "can not add view. Please try again...";
+      toast.error(parseErrorMessage(errorMessage));
+      console.error('Error add view :', error);
+    }
+  };
+
   
    // For subscription status
    const [subStatus, setSubStatus] = useState(true);
@@ -89,10 +103,19 @@ function VideoDetail() {
     }
   };
   
-  // useEffect to fetch video data
+  // useEffect to fetch video data and add view
   useEffect(() => {
-    fetchVideoData();
+    const updateVideoDataAndAddView = async () => {
+      try {
+        await addview(videoId);
+        await fetchVideoData();  
+      } catch (error) {
+        console.error("Error updating video data or adding view:", error);
+      }
+    };
+    updateVideoDataAndAddView();
   }, [videoId]);
+  
   
   // useEffect to fetch the subscriber count and subStatus after ownerId is available
   useEffect(() => {
@@ -109,20 +132,20 @@ function VideoDetail() {
 
   // for side videos 
   const [videos, setVideos] = useState([]);
+  const renderVideo = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/videos`);
+      toast.success(response.data.message);
+      setVideos(response.data.data.docs);
+    } catch (error) {
+      toast.error(parseErrorMessage(error.response.data));
+      setError(
+        error.message || "Failed to fetch videos. Please try again..."
+      );
+      console.error("side videos are not fetched :", error);
+    }
+  };
   useEffect(() => {
-    const renderVideo = async () => {
-      try {
-        const response = await axiosInstance.get(`/api/videos`);
-        toast.success(response.data.message);
-        setVideos(response.data.data.docs);
-      } catch (error) {
-        toast.error(parseErrorMessage(error.response.data));
-        setError(
-          error.message || "Failed to fetch videos. Please try again..."
-        );
-        console.error("side videos are not fetched :", error);
-      }
-    };
     renderVideo();
   }, []);
 
@@ -241,12 +264,9 @@ function VideoDetail() {
       }, [videoId]);
 
       
-       
+      
 
-
-
-
-  
+      
 
  
   return (
@@ -302,7 +322,7 @@ function VideoDetail() {
                               viewBox="0 0 24 24"
                               width="20"
                               height="20"
-                              fill={likeStatus ? 'red' : 'none'} // Red fill if liked, none if not
+                              fill={likeStatus ? 'red' : 'none'} 
                               stroke="currentColor"
                               strokeWidth="2"
                               strokeLinecap="round"
@@ -446,18 +466,6 @@ function VideoDetail() {
               </div>
             ))}
 
-              {/* <div className="flex justify-between my-4">
-                {currentPage > 1 && (
-                  <button className="text-white" onClick={() => handlePageChange(currentPage - 1)}>
-                    Previous
-                  </button>
-                )}
-                {noOfComment > limit * currentPage && (
-                  <button className="text-white" onClick={() => handlePageChange(currentPage + 1)}>
-                    Next
-                  </button>
-                )}
-              </div> */}
 
           </div>
 
@@ -473,6 +481,7 @@ function VideoDetail() {
                 <div
                   key={video._id}
                   className="w-full border-b pb-4 flex items-start"
+                  // onClick={ ()=>{addview(video._id)} }
                 >
                   <div className="relative w-1/3">
                     <div className="relative pt-[56%]">
@@ -482,9 +491,7 @@ function VideoDetail() {
                         className="absolute inset-0 h-full w-full object-cover"
                       />
                       <span className="absolute bottom-1 right-1 inline-block rounded bg-black px-1.5 text-xs text-white">
-                        {new Date(video.duration * 1000)
-                          .toISOString()
-                          .substr(11, 8)}
+                        {formatDuration(video.duration)}
                       </span>
                     </div>
                   </div>

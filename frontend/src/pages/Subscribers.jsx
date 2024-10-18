@@ -59,6 +59,7 @@ function Subscribers() {
             </span>
             <input className="w-full bg-transparent outline-none" placeholder="Search" />
           </div>
+
           <div className="flex w-full justify-between">
             <div className="flex items-center gap-x-2">
               <div className="h-14 w-14 shrink-0">

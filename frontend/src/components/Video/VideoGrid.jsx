@@ -31,6 +31,18 @@ function VideoGrid() {
     renderVideo();
   }, [dispatch]);
 
+  const addview = async (videoId) => {
+    try {
+      const response = await axiosInstance.patch(`/api/videos/add/view/${videoId}`);
+      toast.success(response.data.message);
+    } catch (error) {
+      const errorMessage = error.response ? error.response.data : "can not add view. Please try again...";
+      toast.error(parseErrorMessage(errorMessage));
+      console.error('Error add view :', error);
+    }
+};
+  
+
   const formatDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
@@ -60,7 +72,6 @@ function VideoGrid() {
   };
 
   console.log(videos)
-  
 
   return (
     <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
@@ -73,6 +84,7 @@ function VideoGrid() {
 
             <NavLink to={`/video/${video._id}`}>
               <div 
+              onClick={ ()=>{addview(video._id)} }
               className="relative mb-2 w-full pt-[56%] ">
                 <div className="absolute inset-0">
                   <img

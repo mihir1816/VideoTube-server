@@ -211,6 +211,31 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, searchedVideo, "isPublish toggled successfully"));
 });
 
+const addView = asyncHandler(async (req, res) => {
+
+  const { videoId } = req.params;
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError( 400 , "invalid video object Id" )
+  }
+
+  const searchedVideo = await Video.findById(videoId);
+  if (!searchedVideo) {
+    throw new ApiError(400, "invalid video id");
+  }
+
+  searchedVideo.views = searchedVideo.views + 1;
+
+  await searchedVideo.save({
+    validateBeforeSave: false,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(200, searchedVideo, "view added successfully"));
+
+});
+
 export {
   getAllVideos,
   publishAVideo,
@@ -218,4 +243,5 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  addView
 };
