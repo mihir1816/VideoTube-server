@@ -33,6 +33,7 @@ import {
   UploadVideo,
   PlaylistVideos,
 } from "./components/index.js";
+import Support from "./components/Support.jsx";
 import FeedVideos from "./pages/FeedVideos.jsx";
 import Channel from "./pages/Channel.jsx";
 import MyChannel from "./pages/MyChannel.jsx";
@@ -63,7 +64,7 @@ const router = createBrowserRouter(
           </Route>
           // Owning My Channel
           <Route path="channel/:username" element={<MyChannel />}>
-            <Route path="" element={<MyChannelVideos />} /> 
+            <Route path="myVideos" element={<MyChannelVideos />} /> 
             <Route path="tweets" element={<MyChannelTweets />} />
             <Route path="playlists" element={<MyChannelPlaylists />} />
             <Route path="subscribed" element={<MyChannelSubscribed />} />
@@ -71,21 +72,26 @@ const router = createBrowserRouter(
           </Route>
           //Settings
           <Route path="settings" element={<Settings />}>
-            <Route path="" element={<EditPersonalInfo />} />
+            <Route path="personalInfo" element={<EditPersonalInfo />} />
             <Route path="channelinfo" element={<EditChannelInfo />} />
             <Route path="changepwd" element={<ChangePassword />} />
           </Route>
           // Playlists
           <Route path="playlist/:playlistId" element={<PlaylistVideos />} />
+          
         </Route>
+        // support
+          <Route path="/support" element={<Support />} />
         //Video Watching
         <Route path="/video/:videoId" element={<VideoDetail />} />
         // Admin Dashboard
         <Route path="/admin/dashboard" element={<Dashboard />} />
+        
       </Route>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
-    </Route>
+      
+    </Route>  
   )
 );
 

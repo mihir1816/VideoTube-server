@@ -28,7 +28,7 @@ function VideoDetail() {
       }
       const response = await axiosInstance.get(`/api/subscriptions/c/${ownerId}`);
       setNoOfSubscribers(response.data.data.length);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
     } catch (error) {
       toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching sub list and count data:", error);
@@ -41,7 +41,7 @@ function VideoDetail() {
       const response = await axiosInstance.get(`/api/videos/${videoId}`);
       setPlayingVideo(response.data.data);
       setOwnerId(response?.data?.data?.owner?._id);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
     } catch (error) {
       toast.error(parseErrorMessage(error.response.data));
       console.error("Error fetching video data:", error);
@@ -52,7 +52,7 @@ function VideoDetail() {
   const addview = async (videoId) => {
     try {
       const response = await axiosInstance.patch(`/api/videos/add/view/${videoId}`);   
-      toast.success(response.data.message);   
+      // toast.success(response.data.message);   
       await renderVideo() ;  
     } catch (error) {
       const errorMessage = error.response ? error.response.data : "can not add view. Please try again...";
@@ -135,7 +135,7 @@ function VideoDetail() {
   const renderVideo = async () => {
     try {
       const response = await axiosInstance.get(`/api/videos`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       setVideos(response.data.data.docs);
     } catch (error) {
       toast.error(parseErrorMessage(error.response.data));
@@ -213,7 +213,7 @@ function VideoDetail() {
           try {
             console.log("Creating comment with data: " + newComment);
             const response = await axiosInstance.post(`/api/comments/${videoId}`, { commentContent: newComment });
-            toast.success(response.data.message);
+            // toast.success(response.data.message);
             // Refresh comments after adding a new one
             await renderComments(); // Call renderComments to refresh the list
             console.log(response);
@@ -239,7 +239,7 @@ function VideoDetail() {
       const fetchnoOfLikes= async () => {
         try {
           const response = await axiosInstance.get(`/api/likes/likecount/v/${videoId}`);
-          toast.success(response.data.message);
+          // toast.success(response.data.message);
           console.log(response); 
           setNoOfLikes(response.data.count); 
           setLikeStatus(response.data.likeStatus) ; 
@@ -252,7 +252,7 @@ function VideoDetail() {
           try {
             const response = await axiosInstance.post(`/api/likes/toggle/v/${videoId}`);
             await fetchnoOfLikes()
-            toast.success(response.data.message);
+            // toast.success(response.data.message);
           } catch (error) {
             const errorMessage = error.response ? error.response.data : "can not toggle like. Please try again...";
             toast.error(parseErrorMessage(errorMessage));
@@ -262,11 +262,6 @@ function VideoDetail() {
       useEffect(() => {
         fetchnoOfLikes();
       }, [videoId]);
-
-      
-      
-
-      
 
  
   return (

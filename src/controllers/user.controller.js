@@ -5,6 +5,7 @@ import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose , {isValidObjectId} from "mongoose";
+import { Video } from "../models/video.model.js";
 
 
 const generateAccessAndRefereshTokens = async(userId) =>{
@@ -326,21 +327,23 @@ const updateUserAvatar = asyncHandler( async(  req , res) =>{
 
 const updateUserCoverImage = asyncHandler( async(  req , res) =>{
     const CoverImageLocalPath = req.file?.path
+
     if( ! CoverImageLocalPath ){
         throw new ApiError( 400 , "CoverImage file is missing" )
     }
 
     const CoverImage = await uploadOnCloudinary( CoverImageLocalPath )
+    console.log(CoverImage)
 
     if( !CoverImage.url ){
-        throw new ApiError( 400 , "error while uploading avatar on cloudinary" )
+        throw new ApiError( 400 , "error while uploading coverImage on cloudinary" )
     }
 
     const user = await User.findByIdAndUpdate(
         req.user?._id , 
         {
            $set : {
-            CoverImage : CoverImage.url
+            coverImage : CoverImage.url
            }
         } , 
         {new :true }
@@ -429,90 +432,90 @@ const getUserChannelProfile = asyncHandler ( async( req , res )=>{
 
 
 // error 
-const getWatchHistory = asyncHandler( async(req, res) => {
-    // console.log("inside")
-    // console.log(req.user.watchHistory);
+const getWatchHistory = asyncHandler(async (req, res) => {
+    try {
+        console.log("Fetching watch history...");
+        console.log(req.user._id) ; 
 
-    // console.log(req.user._id)
-    const user = await User.aggregate([
-        {
-            $match:{
-                _id: new mongoose.Types.ObjectId(req.user._id),
-            }
-        },
-        {
-            $lookup:{
-                from: "videos",
-                localField: "watchHistory",
-                foreignField : "_id",
-                as: "watchHistory",
-                pipeline:[
-                    {
-                        $lookup:{
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as  : "owner",
-                            pipeline:[
-                                {
-                                    $project:{
-                                        fullName:1,
-                                        userName: 1,
-                                        avatar:1
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        $addFields:{
-                                ownerDetails:{
-                                    $first: "$owner"
-                                }
-                        }
-                    }
-                ]
-            }
-        }
-    ])
+        const user = await User.findById(req.user._id)
+            .populate({
+                path: 'watchHistory',  
+                populate: {
+                    path: 'owner',  
+                    select: 'fullName userName avatar', 
+                },
+                select: 'title description createdAt' 
+            })
+            .select('watchHistory')
+            .exec(); 
 
-    // console.log(user) ; 
+            console.log(user) ; 
 
-    return res.status(200).json(new ApiResponse(200 , user[0].watchHistory , "watch history fetch succesfully"));
-})
+        
+        return res.status(200).json(new ApiResponse(200, user, "Watch history fetched successfully"));
+    } catch (error) {
+        console.error("Error fetching watch history:", error);
+        return res.status(500).json(new ApiResponse(500, null, "An error occurred while fetching watch history"));
+    }
+});
 
 
-const addVideoToWatchHistory = asyncHandler( async(req , res)=>{
-    const {videoId} = req.body ;
+
+const addVideoToWatchHistory = asyncHandler(async (req, res) => {
+    const { videoId } = req.body;
 
     if (!isValidObjectId(videoId)) {
-        throw new ApiError( 400 , "invalid video object Id" )
+        throw new ApiError(400, "Invalid video object ID");
     }
 
-    const isVideoInWatchHistory = req.user?.watchHistory.includes(videoId) ; 
+    const isVideoInWatchHistory = req.user?.watchHistory.some(
+        (video) => video._id?.toString() === videoId
+    );
 
-    if( isVideoInWatchHistory ){
-        throw new ApiError( 400 ,"video is already avialable in  watch history"  )
+    if (isVideoInWatchHistory) {
+        return res.json(
+            new ApiResponse(200, req.user, "Video is already in watch history")
+        );
     }
 
-    const user = await User.findByIdAndUpdate(
-        req.user?._id , 
-        { 
-            $push: { watchHistory: videoId }
-        }, 
-        {new :true }
-    ).select("-password")  
+    const video = await Video.findById(videoId)
+        .populate("owner", "username avatar") 
+        .select("title description thumbnail duration views createdAt owner");
 
-    if(! user ){
-        throw new ApiError( 400 , "cant find user" ) ; 
+    if (!video) {
+        throw new ApiError(404, "Video not found");
     }
+
+
+    const videoToAdd = {
+        _id: video._id,
+        title: video.title,
+        description: video.description,
+        thumbnail: video.thumbnail,
+        views: video.views,
+        createdAt: video.createdAt,
+        duration : video.duration , 
+        owner: {
+            _id: video.owner._id,
+            username: video.owner.username,
+            avatar: video.owner.avatar
+        }
+    };
     
-    return res
-    .json( 
-       new ApiResponse(200 ,user , "video added to watch history successfully"  )
-    )
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $push: { watchHistory: videoToAdd } },
+        { new: true }
+    ).select("-password"); 
 
-} )
+    if (!user) {
+        throw new ApiError(400, "Can't find user");
+    }
+
+    return res.json(
+        new ApiResponse(200, user, "Video added to watch history successfully")
+    );
+});
 
 export {
     registerUser , 

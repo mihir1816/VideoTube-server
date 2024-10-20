@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-// error
+
 const getAllVideos = asyncHandler(async (req, res) => {
   const page = 1, limit = 10, sortBy = 'durationInSeconds', sortType = -1;
 
@@ -16,18 +16,16 @@ const getAllVideos = asyncHandler(async (req, res) => {
       isPublished: true
     };
 
-    // Define sort options
     const sortOptions = { [sortBy]: parseInt(sortType), createdAt: -1, title: 1, views: -1 };
 
-    // Find videos with pagination, sorting, and populating owner details
+   
     const result = await Video.find(matchStage)
       .sort(sortOptions)
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('owner', 'username avatar') // Populate the owner with username and avatar
-      .exec();
+      .populate('owner', 'username avatar') 
 
-    const totalDocs = await Video.countDocuments(matchStage); // Get total number of documents for pagination
+    const totalDocs = await Video.countDocuments(matchStage); 
 
     return res.status(200).json(
       new ApiResponse(200, { docs: result, totalDocs, totalPages: Math.ceil(totalDocs / limit) }, "All videos are loaded successfully")
@@ -38,6 +36,55 @@ const getAllVideos = asyncHandler(async (req, res) => {
     return res.status(500).json(new ApiError(500, "Failed to load videos"));
   }
 });
+
+const getAllUserVideos = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const sortBy = 'durationInSeconds', sortType = -1;
+
+  try {
+    // Ensure the userId is valid before proceeding
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json(new ApiError(400, "Invalid user ID"));
+    }
+
+    console.log(`Fetching videos for user: ${userId}`); 
+
+    const matchStage = {
+      owner: mongoose.Types.ObjectId(userId),
+      isPublished: true
+    };
+
+    console.log("Match stage:", matchStage); 
+
+    const sortOptions = { [sortBy]: parseInt(sortType), createdAt: -1, title: 1, views: -1 };
+
+    const result = await Video.find(matchStage)
+      .sort(sortOptions)
+
+    if (!result || result.length === 0) {
+      console.error("No videos found for user");  
+      return res.status(404).json(new ApiError(404, "No videos found for this user"));
+    }
+
+    console.log("Found videos:", result.length); 
+
+    const totalDocs = await Video.countDocuments(matchStage);
+
+    console.log("Total video documents:", totalDocs); 
+
+    return res.status(200).json(
+      new ApiResponse(200, { docs: result, totalDocs, totalPages: Math.ceil(totalDocs / limit) }, "User's videos loaded successfully")
+    );
+
+  } catch (error) {
+    console.error("Error loading user's videos:", error.message);  // Log error message
+    return res.status(500).json(new ApiError(500, "Failed to load user's videos"));
+  }
+});
+
+
+
+
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -243,5 +290,6 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
-  addView
+  addView , 
+  getAllUserVideos
 };

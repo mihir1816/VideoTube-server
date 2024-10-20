@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import EmptySubscription from "./EmptySubscription";
 
 function ChannelSubscribed() {
-  const [subscribed, setSubscribed] = useState("null");
+  const [subscribed, setSubscribed] = useState(null);
 
   return !subscribed ? (
     <EmptySubscription />

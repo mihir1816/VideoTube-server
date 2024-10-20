@@ -6,13 +6,14 @@ import {
     publishAVideo,
     togglePublishStatus,
     updateVideo,
-    addView
+    addView , 
+    getAllUserVideos
 } from "../controllers/video.controller.js"
 import {verifyJwt} from "../middlewares/auth.middleware.js"
 import {upload} from "../middlewares/multer.middleware.js"
 
 const router = Router();
-router.use(verifyJwt); // Apply verifyJWT middleware to all routes in this file
+router.use(verifyJwt); 
 
 router
     .route("/")
@@ -40,6 +41,8 @@ router
     .get(getVideoById)
     .delete(deleteVideo)
     .patch(upload.single("thumbnail"), updateVideo);
+    
+router.route("/allVideosOfUser/:userId").get(getAllUserVideos); 
 
 router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
 router.route("/add/view/:videoId").patch(addView);

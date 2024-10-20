@@ -19,7 +19,7 @@ function VideoGrid() {
     const renderVideo = async () => {
         try {
           const response = await axiosInstance.get(`/api/videos`); 
-          toast.success(response.data.message); 
+          // toast.success(response.data.message); 
           console.log(response); 
           setVideos(response.data.data.docs) ; 
         } catch (error) {
@@ -31,10 +31,24 @@ function VideoGrid() {
     renderVideo();
   }, [dispatch]);
 
+   const addToHistory = async (videoId) => {
+    try {
+      const response = await axiosInstance.get(`/api/users/addVideoToWatchHistory`, { videoId });
+      // toast.success(response.data.message);
+    } catch (error) {
+      toast.error(parseErrorMessage(error.response.data));
+      setError(
+        error.message || "Failed to add video to watchhistory. Please try again..."
+      );
+      console.error("video is not added to watchhistory  :", error);
+    }
+  };
+
+
   const addview = async (videoId) => {
     try {
       const response = await axiosInstance.patch(`/api/videos/add/view/${videoId}`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
     } catch (error) {
       const errorMessage = error.response ? error.response.data : "can not add view. Please try again...";
       toast.error(parseErrorMessage(errorMessage));
@@ -84,7 +98,10 @@ function VideoGrid() {
 
             <NavLink to={`/video/${video._id}`}>
               <div 
-              onClick={ ()=>{addview(video._id)} }
+              onClick={() => {
+                addview(video._id);
+                addToHistory(video._id); 
+            }}
               className="relative mb-2 w-full pt-[56%] ">
                 <div className="absolute inset-0">
                   <img

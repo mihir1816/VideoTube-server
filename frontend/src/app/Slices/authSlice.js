@@ -25,35 +25,6 @@ export const login = createAsyncThunk("auth/login", async (data, { rejectWithVal
   }
 });
 
-// Async thunk to refresh the access token
-// export const refreshAccessToken = createAsyncThunk(
-//   "auth/refresh-token",
-//   async (_, { rejectWithValue }) => {
-//     console.log("step 1 : refreshAccessToken dispatched")
-//     try {
-//       const refreshToken = localStorage.getItem("refreshToken");
-//       if (!refreshToken) {
-//         throw new Error("No refresh token available");
-//       }
-
-//       const response = await axiosInstance.post("/api/users/refresh-token", { refreshToken });
-//       const { accessToken, newRefreshToken, user } = response.data.data;
-      
-//       // Update tokens in localStorage
-//       localStorage.setItem("accessToken", accessToken);
-//       localStorage.setItem("refreshToken", newRefreshToken);
-
-//       toast.success("Token refreshed successfully 🤩");
-//       return user;
-//     } catch (error) {
-//       toast.error(parseErrorMessage(error.response.data));
-//       localStorage.removeItem("accessToken");
-//       localStorage.removeItem("refreshToken");
-//       return rejectWithValue(error.response.data);
-//     }
-//   }
-// );
-
 
 export const signup = createAsyncThunk("auth/signup", async (data) => {
   try {
