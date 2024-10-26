@@ -37,6 +37,7 @@ const getAllTweets = async (req, res) => {
       console.log("Error in fetching tweets: " + error);
       throw new ApiError(500, "Tweets could not be fetched");
     }
+
   };
   
   
@@ -72,65 +73,36 @@ const createTweet = asyncHandler(async (req, res) => {
 
 const getUserTweets = asyncHandler(async (req, res) => {
 
-        const { userId } = req.params 
-
-    if (!isValidObjectId(userId)) {
-        throw new ApiError( 400 , "invalid channel object Id" )
+    try {
+      const userId = req.user._id; 
+  
+      const tweets = await Tweet.find({ owner: userId }) 
+        .sort({ createdAt: -1 });
+  
+     
+      const tweetIds = tweets.map(tweet => tweet._id);
+  
+      const likes = await Like.find({
+        tweet: { $in: tweetIds },
+        likedBy: userId
+      })
+      .select('tweet')
+     
+      const likedTweetIds = new Set(likes.map(like => like.tweet.toString()));
+  
+      const tweetsWithLikeStatus = tweets.map(tweet => ({
+        ...tweet.toObject(),
+        liked: likedTweetIds.has(tweet._id.toString())
+      }));
+  
+      return res.status(200).json(
+        new ApiResponse(200, tweetsWithLikeStatus, "All tweets fetched successfully")
+      );
+    } catch (error) {
+      console.log("Error in fetching tweets: " + error);
+      throw new ApiError(500, "Tweets could not be fetched");
     }
-
-    const user = await User.aggregate([
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(userId)
-            }
-        },
-        {
-            $lookup: {
-                from: "tweets",
-                localField: "_id",
-                foreignField: "owner",
-                as: "tweetList",
-            }
-        }
-    ])
-
-    if( ! user?.length ){
-        throw new ApiError( 404 , "there are no tweets by user" )
-    }
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            user[0].tweetList,
-            "user tweets fetched successfully"
-        )
-    )
-
-    //?????????????????????????????? what will be format of user and why i am doing this  user[0].tweetList, ??
-// Copilot
-// Good catch! The format of user in your query result will be an array of objects, even if there's only one user matching the criteria. It's because MongoDB aggregation always returns an array. Here’s a sample format:
-
-// json
-
-// [
-//   {
-//     "_id": "userId",
-//     "tweetList": [
-//       {
-//         "_id": "tweet1",
-//         "content": "First tweet",
-//         "owner": "userId"
-//       },
-//       {
-//         "_id": "tweet2",
-//         "content": "Second tweet",
-//         "owner": "userId"
-//       }
-//     ]
-//   }
-// ]
+    
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
@@ -142,21 +114,6 @@ const updateTweet = asyncHandler(async (req, res) => {
     if (!isValidObjectId(tweetId)) {
         throw new ApiError( 400 , "invalid tweet object Id" )
     }
-
-    // getting error in updating by this query.......
-
-    // const tweet = Tweet.findByIdAndUpdate( 
-    //     tweetId ,   
-    //     {
-    //         $set : {
-    //             content : newContent
-    //         }
-    //     } , 
-    //     {
-    //         new : true
-    //     }
-    //  )
-
     
     const tweet = await Tweet.findById(tweetId);
 

@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
-import selectCurrentUser from '../app/Slices/authSlice.js'
+import { selectCurrentUser } from '../app/Slices/authSlice.js';  
+import { NavLink } from "react-router-dom";
+import { getCurrentUser } from "../app/Slices/authSlice.js";
+import { useDispatch } from "react-redux";
 
 function History() {
 
@@ -9,9 +12,10 @@ function History() {
     const seconds = Math.floor(duration % 60);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
+
   const timeSince = (date) => {
     const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
+    const seconds = Math.floor((now - new Date(date)) / 1000);
 
     let interval = Math.floor(seconds / 31536000);
     if (interval > 1) return `${interval} years ago`;
@@ -30,84 +34,101 @@ function History() {
 
     return `${Math.floor(seconds)} seconds ago`;
   };
-  function formatNumber(num) {
+
+ const formatNumber = (num) => {
     if (num >= 1e9) {
-        return (num / 1e9).toFixed(1) + "B"; // Convert to Billion (B)
+        return (num / 1e9).toFixed(1) + "B"; 
     } else if (num >= 1e6) {
-        return (num / 1e6).toFixed(1) + "M"; // Convert to Million (M)
+        return (num / 1e6).toFixed(1) + "M"; 
     } else if (num >= 1e3) {
-        return (num / 1e3).toFixed(1) + "K"; // Convert to Thousand (K)
+        return (num / 1e3).toFixed(1) + "K"; 
     } else {
-        return num.toString(); // Less than 1000, return as is
+        return num.toString(); 
     }
+  };
+
+  const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser); 
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      await dispatch(getCurrentUser());  
+      setLoading(false);  
+    };
+    fetchUser();
+  }, [dispatch]);
+
+  
+
+  console.log("User data:", user);
+
+  if (!user) {
+    return <p>Loading...</p>;
   }
 
-  const user = useSelector(selectCurrentUser) ; 
-
-  if( user ){
-      console.log(" this is ....................user ")
-      console.log(user)
-      console.log(user.type)
-  }
-
-
-
-  const videos = user?.watchHistory ?? [];
+  const videos = user?.watchHistory ?? []; 
 
   return (
-    <section class="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
-      <div class="flex flex-col gap-4 p-4">
+    <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
+      <div className="flex flex-col gap-4 p-4">
 
-      { videos.length > 0  && videos.map((video) => (
-        <div class="w-full md:flex" key={video._id}>
-          <div class="relative mb-2 w-full md:mb-0 md:w-5/12">
-            <div class="w-full pt-[56%]">
-              <div class="absolute inset-0">
-                <img
-                  src={video?.thumbnail} 
-                  alt={video?.title} // Dynamic title as alt tex
-                  class="h-full w-full"
-                />
-              </div>
-              <span class="absolute bottom-1 right-1 inline-block rounded bg-black px-1.5 text-sm">
-                {formatDuration(video?.duration)} 
-              </span>
-            </div>
-          </div>
-          <div class="flex gap-x-2 md:w-7/12">
-            <div class="h-10 w-10 shrink-0 md:hidden">
-              <img
-                src={video?.owner?.avatar} 
-                alt={video?.owner?.username} 
-                class="h-full w-full rounded-full"
-              />
-            </div>
-            <div class="w-full">
-              <h6 class="mb-1 font-semibold md:max-w-[75%]">
-                {video?.title} 
-              </h6>
-              <p class="flex text-sm text-gray-200 sm:mt-3">
-                {formatNumber(video?.views)} Views · {timeSince(video?.createdAt)} 
-              </p>
-              <div class="flex items-center gap-x-4">
-                <div class="mt-2 hidden h-10 w-10 shrink-0 md:block">
+        {videos.length > 0 ? (
+
+          videos.map((video) => (
+            <NavLink to={`/video/${video?._id}`}>
+            <div key={video._id} className="w-full max-w-3xl gap-x-4 md:flex">
+
+            <div className="relative mb-2 w-full md:mb-0 md:w-5/12">
+              <div className="w-full pt-[56%]">
+                
+                <div className="absolute inset-0">
                   <img
-                    src={video?.owner?.avatar} 
-                    alt={video?.owner?.username} 
-                    class="h-full w-full rounded-full"
+                    src={video?.thumbnail}
+                    alt={video?.title}
+                    className="h-full w-full object-cover"
                   />
                 </div>
-                <p class="text-sm text-gray-200">
-                  {video?.owner?.username} 
-                </p>
+                <span className="absolute bottom-1 right-1 inline-block rounded bg-black px-1.5 text-sm">
+                  {formatDuration(video?.duration)}
+                </span>
               </div>
-              <p class="mt-2 hidden text-sm md:block">
-                {video?.description} 
-              </p>
+
             </div>
+
+            <div className="flex gap-x-2 md:w-7/12">
+              <div className="h-10 w-10 shrink-0 md:hidden">
+                <img
+                  src={video?.owner?.avatar}
+                  alt={video?.owner?.username}
+                  className="h-full w-full rounded-full"
+                />
+              </div>
+              <div className="w-full">
+                <h6 className="mb-1 font-semibold md:max-w-[75%]">{video?.title}</h6>
+                <p className="flex text-sm text-gray-200 sm:mt-3">
+                  {formatNumber(video?.views)} Views · {timeSince(new Date(video?.createdAt))}
+                </p>
+                <div className="flex items-center gap-x-4">
+                  <div className="mt-2 hidden h-10 w-10 shrink-0 md:block">
+                    <img
+                      src={video?.owner?.avatar}
+                      alt={video?.owner?.username}
+                      className="h-full w-full rounded-full"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-200">{video?.owner?.username}</p>
+                </div>
+                <p className="mt-2 hidden text-sm md:block">{video?.description}</p>
+              </div>  
+            </div>
+
           </div>
-        </div>
-      ))}
+          </NavLink>
+          ))
+
+        ) : (
+          <p>No watch history found.</p>
+        )}
         
       </div>
     </section>

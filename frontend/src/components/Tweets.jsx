@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { axiosInstance } from "../helpers/axios.helper.js";
 import { parseErrorMessage } from "../helpers/parseErrMsg.helper";
 import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
 
 
 function ChannelTweets() {
@@ -111,11 +112,13 @@ function ChannelTweets() {
       {tweets.map((tweet, index) => (
         <div key={index} className="flex gap-3 border-b border-gray-700 py-4 ml-0 last:border-b-transparent w-full">
           <div className="h-14 w-14 ml-5 shrink-0">
+          <NavLink to={`/user/${tweet.owner.username}/${tweet.owner._id}`}>
             <img
               src={tweet.owner.avatar}
               alt={tweet.owner.username}
               className="h-full w-full rounded-full"
             />
+            </NavLink>
           </div>
           <div className="w-full">
             <h4 className="mb-1 flex items-center gap-x-3">

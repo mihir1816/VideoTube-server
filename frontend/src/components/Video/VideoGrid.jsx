@@ -33,8 +33,8 @@ function VideoGrid() {
 
    const addToHistory = async (videoId) => {
     try {
-      const response = await axiosInstance.get(`/api/users/addVideoToWatchHistory`, { videoId });
-      // toast.success(response.data.message);
+      const response = await axiosInstance.post(`/api/users/addVideoToWatchHistory`, { videoId });
+      toast.success(response.data.message);
     } catch (error) {
       toast.error(parseErrorMessage(error.response.data));
       setError(
@@ -118,11 +118,13 @@ function VideoGrid() {
 
               <div className="flex gap-x-2">
                 <div className="h-10 w-10 shrink-0">
+                <NavLink to={`/user/${video.owner.username}/${video.owner._id}`}>
                   <img
                     src={video.owner.avatar}
                     alt="expresslearner"
                     className="h-full w-full rounded-full"
                   />
+                  </NavLink>
                 </div>
                 <div className="w-full">
                   <h6 className="mb-1 font-semibold">{video.title}</h6>

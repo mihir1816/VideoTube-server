@@ -1,9 +1,48 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../app/Slices/authSlice.js";
+import { useEffect} from "react";
+import { axiosInstance } from "../helpers/axios.helper.js";
+import { parseErrorMessage } from "../helpers/parseErrMsg.helper.js";
+import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
 
 function Subscribers() {
-  const [subscriber, setSubscriber] = useState("m");
+  const [subscriberList, setsubscriberList] = useState(null);
 
-  return !subscriber ? (
+  const user = useSelector(selectCurrentUser);
+
+  const fetchSubList = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/subscriptions/c/${user?._id}`);
+      setsubscriberList(response.data.data)
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error(parseErrorMessage(error?.response?.data));
+      console.error("Error fetching sub list and count data:", error);
+    }
+  };
+
+  const toggleSub = async (channelId) => {
+    try {
+      const response = await axiosInstance.post(`/api/subscriptions/t/${channelId}`);
+      toast.success(response.data.message);
+      await fetchSubList();
+    } catch (error) {
+      toast.error(parseErrorMessage(error?.response?.data));
+      console.error("Error toggleing subs:", error);
+    }
+  };
+
+  useEffect(() => {
+    if(user){
+      fetchSubList();
+    }
+  }, []); 
+
+
+
+  return !subscriberList ? (
     <section class="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
       <div className="flex justify-center p-4">
         <div className="w-full max-w-sm text-center">
@@ -60,50 +99,39 @@ function Subscribers() {
             <input className="w-full bg-transparent outline-none" placeholder="Search" />
           </div>
 
-          <div className="flex w-full justify-between">
+          {subscriberList.map((subscriber) => (
+          <div key={subscriber?.subscriberId} className="flex w-full justify-between mb-4">
             <div className="flex items-center gap-x-2">
               <div className="h-14 w-14 shrink-0">
+              <NavLink to={`/user/${subscriber.username}/${subscriber.subscriberId}`}>
                 <img
-                  src="https://images.pexels.com/photos/3532545/pexels-photo-3532545.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                  alt="Code Master"
+                  src={subscriber?.avatar}
+                  alt={subscriber?.username}
                   className="h-full w-full rounded-full"
                 />
+                </NavLink>
               </div>
               <div className="block">
-                <h6 className="font-semibold">Code Master</h6>
-                <p className="text-sm text-gray-300">20K Subscribers</p>
+                <h6 className="font-semibold">{subscriber?.username}</h6>
+                <p className="text-sm text-gray-300">{subscriber?.subscriberCount} Subscribers</p>
               </div>
             </div>
             <div className="block">
-              <button className="group/btn px-3 py-2 text-black bg-[#ae7aff] focus:bg-white">
-                <span className="group-focus/btn:hidden">Subscribed</span>
-                <span className="hidden group-focus/btn:inline">Subscribe</span>
-              </button>
-            </div>
-          </div>
 
-          <div className="flex w-full justify-between">
-            <div className="flex items-center gap-x-2">
-              <div className="h-14 w-14 shrink-0">
-                <img
-                  src="https://images.pexels.com/photos/1115822/pexels-photo-1115822.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                  alt="MERN Stack"
-                  className="h-full w-full rounded-full"
-                />
-              </div>
-              <div className="block">
-                <h6 className="font-semibold">MERN Stack</h6>
-                <p className="text-sm text-gray-300">440K Subscribers</p>
-              </div>
-            </div>
-            <div className="block">
-              <button className="group/btn px-3 py-2 text-black bg-white focus:bg-[#ae7aff]">
-                <span className="group-focus/btn:hidden">Subscribe</span>
-                <span className="hidden group-focus/btn:inline">Subscribed</span>
-              </button>
+            <button
+              className={`px-3 py-2 text-black ${
+                subscriber.isSubscribedByMe ? 'bg-gray-300' : 'bg-[#ae7aff]'
+              }`}
+              onClick={() => toggleSub(subscriber?.subscriberId)}
+            >
+              {subscriber?.isSubscribedByMe ? 'Unsubscribe' : 'Subscribe'}
+            </button>
+
             </div>
           </div>
-          
+        ))}
+
+        
         </div>
       </div>
     </section>

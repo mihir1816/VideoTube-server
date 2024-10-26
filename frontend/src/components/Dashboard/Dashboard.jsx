@@ -13,7 +13,8 @@ import UploadVideo from "../Channel/UploadVideo.jsx";
 function Dashboard() {
 
   const user = useSelector(selectCurrentUser);
-
+  // console.log("user lalal")
+  console.log(user)
   const formatDate = (createdAt) => {
     const date = new Date(createdAt);
     const day = String(date.getDate()).padStart(2, '0');
@@ -340,6 +341,7 @@ function Dashboard() {
                           ></path>
                         </svg>
                       </button>
+                      
                     </div>
                   </td>
                 </tr>

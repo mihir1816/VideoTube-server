@@ -10,7 +10,13 @@ const initialState = {
   userData: null,
 };
 
-export const selectCurrentUser = (state) => state.auth.userData; 
+// console.log("first")
+export const selectCurrentUser = (state) => {
+// console.log(state.auth.userDa/ta)
+// console.log("authslinjcsndcj")
+
+  return state.auth.userData || null; 
+}
 
 
 export const login = createAsyncThunk("auth/login", async (data, { rejectWithValue }) => {

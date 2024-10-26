@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 function MyChannel() {
 
   const user = useSelector(selectCurrentUser);
+
   const formatDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
@@ -48,8 +49,8 @@ function MyChannel() {
     } else {
         return num.toString(); // Less than 1000, return as is
     }
-  }
-
+  } 
+  
   const [noOfSub, setnoOfSub] = useState(500)
 
   const fetchNoOfSub = async () => {

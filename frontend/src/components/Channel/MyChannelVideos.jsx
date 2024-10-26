@@ -2,9 +2,22 @@ import React, { useState } from "react";
 import MyChannelEmptyVideo from "./MyChannelEmptyVideo";
 import UploadVideo from "./UploadVideo";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../app/Slices/authSlice.js";
+import { axiosInstance } from "../../helpers/axios.helper.js";
+import { parseErrorMessage } from "../../helpers/parseErrMsg.helper.js";
+import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
+
+
 
 function MyChannelVideos() {
+
+  const user = useSelector(selectCurrentUser);
+
+
   const [videos, setVideos] = useState(null);
+
   const formatDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
@@ -43,16 +56,40 @@ function MyChannelVideos() {
     }
   }
 
+  
+  const addToHistory = async (videoId) => {
+    try {
+      const response = await axiosInstance.post(`/api/users/addVideoToWatchHistory`, { videoId });
+       toast.success(response.data.message);
+    } catch (error) {
+      toast.error(parseErrorMessage(error.response.data));
+      console.error("video is not added to watchhistory  :", error);
+    }
+  };
+
+
+  const addview = async (videoId) => {
+    try {
+      const response = await axiosInstance.patch(`/api/videos/add/view/${videoId}`);
+      // toast.success(response.data.message);
+    } catch (error) {
+      const errorMessage = error.response ? error.response.data : "can not add view. Please try again...";
+      toast.error(parseErrorMessage(errorMessage));
+      console.error('Error add view :', error);
+    }
+};
+  
+
   useEffect(() => {
     const renderVideo = async () => {
         try {
-          const response = await axiosInstance.get(`/api/videos`); 
-          // toast.success(response.data.message); 
+          const response = await axiosInstance.get(`/api/videos/allVideosOfUser/${user?._id}`); 
+          toast.success(response.data.message); 
           console.log(response); 
-          setVideos(response.data.data.docs) ; 
+          setVideos(response.data.data.result) ; 
         } catch (error) {
           toast.error(parseErrorMessage(error.response.data));
-          setError(error.message || "Failed to fetch videos. Please try again...");
+          // setError(error.message || "Failed to fetch videos. Please try again...");
           console.error("getAllVideos dispatch error:", error);
       }
     };
@@ -65,34 +102,55 @@ function MyChannelVideos() {
     <MyChannelEmptyVideo />
   ) : (
     <>
-      <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 pt-2">
+     <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
+      
+      <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 p-4">
+        {
+        Array.isArray(videos) &&
+          videos.map((video) => (
+            <div className="w-full" key={video._id}>
 
-        <div className="w-full">
-          {videos.map((video) => (
-            <div key={video.id} className="mb-4">
-              <div className="relative mb-2 w-full pt-[56%]">
+            <NavLink to={`/video/${video._id}`}>
+              <div 
+              onClick={() => {
+                addview(video._id);
+                addToHistory(video._id); 
+            }}
+              className="relative mb-2 w-full pt-[56%] ">
                 <div className="absolute inset-0">
                   <img
                     src={video.thumbnail}
                     alt={video.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full"
                   />
                 </div>
-                <span className="absolute bottom-1 right-1 inline-block rounded bg-black px-1.5 text-sm text-white">
+                <span className="absolute bottom-1 right-1 inline-block rounded bg-black px-1.5 text-sm">
                   {formatDuration(video.duration)}
                 </span>
               </div>
-              <h6 className="mb-1 font-semibold">{video.title}</h6>
-              <p className="flex text-sm text-gray-200">
-                {formatNumber(video.views)} Views · {timeSince(video.createdAt)}
-              </p>
+            </NavLink>
+
+              <div className="flex gap-x-2">
+                <div className="h-10 w-10 shrink-0">
+                  <img
+                    src={user?.avatar}
+                    alt="expresslearner"
+                    className="h-full w-full rounded-full"
+                  />
+                </div>
+                <div className="w-full">
+                  <h6 className="mb-1 font-semibold">{video.title}</h6>
+                  <p className="flex text-sm text-gray-200">
+                    {video.views} Views · {timeSince(new Date(video.createdAt))}
+                  </p>
+                  <p className="text-sm text-gray-200">{video.owner.username}</p>
+                </div>
+              </div>
+
             </div>
           ))}
-        </div>
-
-        
       </div>
-      {/* <UploadVideo/> */}
+    </section>
     </>
   );
 }

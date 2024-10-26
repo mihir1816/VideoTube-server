@@ -8,7 +8,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const page = 1, limit = 10, sortBy = 'durationInSeconds', sortType = -1;
+  const sortBy = 'durationInSeconds', sortType = -1;
 
   try {
     const matchStage = {
@@ -21,14 +21,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
    
     const result = await Video.find(matchStage)
       .sort(sortOptions)
-      .skip((page - 1) * limit)
-      .limit(limit)
       .populate('owner', 'username avatar') 
 
-    const totalDocs = await Video.countDocuments(matchStage); 
 
     return res.status(200).json(
-      new ApiResponse(200, { docs: result, totalDocs, totalPages: Math.ceil(totalDocs / limit) }, "All videos are loaded successfully")
+      new ApiResponse(200, { docs: result }, "All videos are loaded successfully")
     );
 
   } catch (error) {
@@ -42,7 +39,6 @@ const getAllUserVideos = asyncHandler(async (req, res) => {
   const sortBy = 'durationInSeconds', sortType = -1;
 
   try {
-    // Ensure the userId is valid before proceeding
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json(new ApiError(400, "Invalid user ID"));
     }
@@ -50,7 +46,7 @@ const getAllUserVideos = asyncHandler(async (req, res) => {
     console.log(`Fetching videos for user: ${userId}`); 
 
     const matchStage = {
-      owner: mongoose.Types.ObjectId(userId),
+      owner: new mongoose.Types.ObjectId(userId),
       isPublished: true
     };
 
@@ -60,6 +56,7 @@ const getAllUserVideos = asyncHandler(async (req, res) => {
 
     const result = await Video.find(matchStage)
       .sort(sortOptions)
+      .populate('owner', 'username avatar') 
 
     if (!result || result.length === 0) {
       console.error("No videos found for user");  
@@ -71,9 +68,9 @@ const getAllUserVideos = asyncHandler(async (req, res) => {
     const totalDocs = await Video.countDocuments(matchStage);
 
     console.log("Total video documents:", totalDocs); 
-
+    console.log(result)
     return res.status(200).json(
-      new ApiResponse(200, { docs: result, totalDocs, totalPages: Math.ceil(totalDocs / limit) }, "User's videos loaded successfully")
+      new ApiResponse(200, { result }, "User's videos loaded successfully")
     );
 
   } catch (error) {
@@ -81,10 +78,6 @@ const getAllUserVideos = asyncHandler(async (req, res) => {
     return res.status(500).json(new ApiError(500, "Failed to load user's videos"));
   }
 });
-
-
-
-
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;

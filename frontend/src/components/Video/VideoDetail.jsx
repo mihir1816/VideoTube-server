@@ -5,6 +5,7 @@ import { axiosInstance } from "../../helpers/axios.helper";
 import { parseErrorMessage } from "../../helpers/parseErrMsg.helper";
 import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
+import SaveToPlayList from "../Playlist/SaveToPlayList";
 
 function VideoDetail() {
 
@@ -61,32 +62,43 @@ function VideoDetail() {
     }
   };
 
+  // to add to watch history
+  const addToHistory = async (videoId) => {
+    try {
+      const response = await axiosInstance.post(`/api/users/addVideoToWatchHistory`, { videoId });
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error(parseErrorMessage(error.response.data));
+      setError(
+        error.message || "Failed to add video to watchhistory. Please try again..."
+      );
+      console.error("video is not added to watchhistory  :", error);
+    }
+  };
+
   
    // For subscription status
    const [subStatus, setSubStatus] = useState(true);
-  // Function to fetch subscription status
   const fetchSubStatus = async () => {
     try {
-      if (!ownerId) {
-        console.error("Owner ID is not available for fetching subscription status.");
-        return;
-      }
-      const response = await axiosInstance.get(`/api/subscriptions/subStatus`, {
-         channelId: ownerId 
+      const response = await axiosInstance.post(`/api/subscriptions/subStatus`, {
+        channelId: ownerId 
       });
       setSubStatus(response.data.data.alreadySubscribed);
-      console.log(response.data.data.alreadySubscribed ) ; 
-      console.log(response ) ;
+      console.log(response)
+      console.log(response.data.data.alreadySubscribed ); 
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Error fetching subscription status';
       toast.error(errorMessage);
       console.error("Error fetching subscription status:", error);
     }
   };
-
   useEffect(() => {
-    console.log('subStatus updated:', subStatus);  // Check if subStatus is being updated correctly
-  }, [subStatus]);
+    if(ownerId){
+      fetchSubStatus() ;
+    }
+  }, [])
+
   
   
   // Function to toggle subscription
@@ -108,7 +120,8 @@ function VideoDetail() {
     const updateVideoDataAndAddView = async () => {
       try {
         await addview(videoId);
-        await fetchVideoData();  
+        await addToHistory(videoId) ; 
+        await fetchVideoData(); 
       } catch (error) {
         console.error("Error updating video data or adding view:", error);
       }
@@ -117,15 +130,15 @@ function VideoDetail() {
   }, [videoId]);
   
   
-  // useEffect to fetch the subscriber count and subStatus after ownerId is available
   useEffect(() => {
     if (ownerId) {
       fetchNoOfSub();  
-      fetchSubStatus();  // Pass ownerId directly to ensure it's available when called
+      fetchSubStatus();  
     }
-  }, [ownerId]);  // Trigger this useEffect when ownerId changes
+  }, [ownerId]);  
   
 
+  
       
       
       
@@ -147,7 +160,7 @@ function VideoDetail() {
   };
   useEffect(() => {
     renderVideo();
-  }, []);
+  }, [videoId]);
 
   const formatDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
@@ -187,7 +200,7 @@ function VideoDetail() {
     }
   }
 
-  
+ 
 
   // to add comment on video 
       const [newComment, setNewComment] = useState("");
@@ -263,6 +276,21 @@ function VideoDetail() {
         fetchnoOfLikes();
       }, [videoId]);
 
+       // for playlist 
+        const [isSaveModalOpen, setSaveModalOpen] = useState(false);
+        const [videoIdToAdd, setVideoIdToAdd] = useState(null);
+
+        const openSaveModal = (videoId) => {
+          setVideoIdToAdd(videoId); 
+          setSaveModalOpen(true);
+        };
+
+        const closeSaveModal = () => {
+          setSaveModalOpen(false); 
+          setVideoIdToAdd(null); 
+        };
+
+
  
   return (
     <section className="w-full pb-[70px] sm:pb-0">
@@ -308,8 +336,7 @@ function VideoDetail() {
                     onClick={toggleLike}
                   >
                      <span className="inline-block flex items-center gap-x-1 group/btn">
-                      <button
-                          
+                      <button  
                           // className={`flex items-center gap-x-1 ${liked ? 'text-[#ae7aff]' : 'text-gray-500'}`} // Change color based on liked status
                       >
                           <svg
@@ -337,18 +364,21 @@ function VideoDetail() {
                 </div>
 
                   <div className="relative block">
-                    <button className="peer flex items-center gap-x-2 rounded-lg bg-white px-4 py-1 text-black">
-                      <span className="inline-block w-5">
-                        {/* Save button SVG */}
+                    <button className="peer flex items-center gap-x-2 rounded-lg bg-white px-4 py-1 text-black"
+                    onClick={() => {openSaveModal(videoId)}}
+                    >
+                        <span className="inline-block w-5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 3H14V1H10V3H7V8H17V3ZM18 8H6V20H18V8ZM16 10V18H8V10H16Z"/>
+                      </svg>
+
                       </span>
                       Save
                     </button>
-                    <div className="absolute right-0 top-full z-10 hidden w-64 overflow-hidden rounded-lg bg-[#121212] p-4 shadow shadow-slate-50/30 hover:block peer-focus:block">
-                      <h3 className="mb-4 text-center text-lg font-semibold">
-                        Save to playlist
-                      </h3>
-                      {/* Playlist save options */}
-                    </div>
+                    {
+                    isSaveModalOpen && 
+                    <SaveToPlayList videoId={videoIdToAdd} userId={ownerId} onClose={closeSaveModal} />
+                  }
                   </div>
                 </div>
               </div>
@@ -357,11 +387,13 @@ function VideoDetail() {
             <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center gap-x-4">
                 <div className="mt-2 h-12 w-12 shrink-0">
+                <NavLink to={`/user/${playingVideo?.owner?.username}/${playingVideo?.owner?._id}`}>
                 <img
-                  src={playingVideo?.owner?.avatar || ""} // Safely accessing the avatar with optional chaining
-                  alt={playingVideo?.owner?.username || "User Avatar"} // Dynamic alt text
+                  src={playingVideo?.owner?.avatar || ""} 
+                  alt={playingVideo?.owner?.username || "User Avatar"} 
                   className="h-full w-full rounded-full"
                 />
+                </NavLink>
                 </div>
                 <div className="block">
                   <p className="text-gray-200">{playingVideo?.owner?.username}  </p>{" "}
@@ -376,9 +408,9 @@ function VideoDetail() {
 
               <button
                 className={`group/btn mr-1 flex w-full items-center gap-x-2 
-                  bg-[${subStatus ? '#ae7aff' : '#ff4f4f'}]  
+                  bg-[${subStatus ? '#ff4f4f' : '#ae7aff'}]  
                   text-[${subStatus ? '#000' : '#fff'}]       
-                  px-1.5 py-1 text-center font-bold 
+                  px-1 py-1 text-center font-bold 
                   shadow-[5px_5px_0px_0px_#4f4e4e] transition-all 
                   duration-150 ease-in-out 
                   group-hover:bg-[${subStatus ? '#9a63ff' : '#e63939'}] 
@@ -386,7 +418,7 @@ function VideoDetail() {
                   active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto`}
                 onClick={toggleSub}
               >
-                <span className="inline-block w-5">
+                <span className="inline-block w-1">
                 </span>
                 <span className={`${subStatus ? 'hidden' : 'block'} `}>
                   Subscribe
@@ -441,8 +473,8 @@ function VideoDetail() {
                 <div className="flex gap-x-4">
                   <div className="mt-2 h-11 w-11 shrink-0">
                     <img
-                      src={comment?.owner?.avatar} // Dynamic avatar from comment data
-                      alt={comment?.ownerInfo?.username} // Dynamic alt text
+                      src={comment?.owner?.avatar} 
+                      alt={comment?.ownerInfo?.username} 
                       className="h-full w-full rounded-full"
                     />
                   </div>
@@ -450,11 +482,11 @@ function VideoDetail() {
                     <p className="flex items-center text-gray-200">
                       {comment?.ownerInfo?.fullName} · 
                       <span className="text-sm">
-                      {timeSince(new Date(comment.createdAt))} {/* Dynamic timestamp */}
+                      {timeSince(new Date(comment.createdAt))} 
                       </span>
                     </p>
                     <p className="text-sm text-gray-200">@{comment?.ownerInfo?.username}</p>
-                    <p className="mt-3 text-sm">{comment?.content}</p> {/* Dynamic comment content */}
+                    <p className="mt-3 text-sm">{comment?.content}</p>
                   </div>
                 </div>
                 <hr className="my-4 border-white" />
@@ -476,7 +508,10 @@ function VideoDetail() {
                 <div
                   key={video._id}
                   className="w-full border-b pb-4 flex items-start"
-                  // onClick={ ()=>{addview(video._id)} }
+                  onClick={() => {
+                    addview(video._id);
+                    addToHistory(video._id); 
+                }}
                 >
                   <div className="relative w-1/3">
                     <div className="relative pt-[56%]">
@@ -509,6 +544,9 @@ function VideoDetail() {
           </div>
         </div>
       </div>
+
+    
+
     </section>
   );
 }

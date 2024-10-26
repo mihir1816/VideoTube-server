@@ -137,9 +137,12 @@ function Settings() {
               <button type="submit" className="group/btn mr-1 flex w-full h-9 items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
                 Update
               </button>
+
+              <NavLink to={`/user/${user?.username}/${user?._id}`}>
               <button className="group/btn mr-1 flex w-full h-9 items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
                 View channel
               </button>
+              </NavLink>
             </div>
           </div>
           <ul className="no-scrollbar sticky top-[66px] z-[2] flex flex-row gap-x-2 border-b-2 border-gray-400 bg-[#121212] py-2 sm:top-[82px]">
