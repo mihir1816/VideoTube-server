@@ -12,6 +12,8 @@ import { toast } from "react-toastify";
 function MyChannel() {
 
   const user = useSelector(selectCurrentUser);
+  const [isLoading, setisLoading] = useState(true)
+
 
   const formatDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
@@ -40,18 +42,23 @@ function MyChannel() {
     return `${Math.floor(seconds)} seconds ago`;
   };
   function formatNumber(num) {
-    if (num >= 1e9) {
-        return (num / 1e9).toFixed(1) + "B"; // Convert to Billion (B)
-    } else if (num >= 1e6) {
-        return (num / 1e6).toFixed(1) + "M"; // Convert to Million (M)
-    } else if (num >= 1e3) {
-        return (num / 1e3).toFixed(1) + "K"; // Convert to Thousand (K)
-    } else {
-        return num.toString(); // Less than 1000, return as is
+    if (num === null || num === undefined || isNaN(num)) {
+      return "0"; 
     }
-  } 
   
-  const [noOfSub, setnoOfSub] = useState(500)
+    if (num >= 1e9) {
+      return (num / 1e9).toFixed(1) + "B";
+    } else if (num >= 1e6) {
+      return (num / 1e6).toFixed(1) + "M"; 
+    } else if (num >= 1e3) {
+      return (num / 1e3).toFixed(1) + "K"; 
+    } else {
+      return num.toString(); 
+    }
+  }
+  
+  
+  const [noOfSub, setnoOfSub] = useState(null)
 
   const fetchNoOfSub = async () => {
     try {
@@ -60,12 +67,12 @@ function MyChannel() {
       setnoOfSub(response.data.data.length);
       // toast.success(response.data.message);
     } catch (error) {
-      toast.error(parseErrorMessage(error?.response?.data));
+      // toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching sub list and count data:", error);
     }
   };
 
-  const [subscribedChannels, setsubscribedChannels] = useState(0)
+  const [subscribedChannels, setsubscribedChannels] = useState(null)
 
   const mySubscription = async () => {
     try {
@@ -74,20 +81,69 @@ function MyChannel() {
       setsubscribedChannels(response.data.data.length);
       // toast.success(response.data.message);
     } catch (error) {
-      toast.error(parseErrorMessage(error?.response?.data));
+      // toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching sub list and count data:", error);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      fetchNoOfSub();  
-      mySubscription()
-    }
-  }, []); 
-
-
-
+    const timer = setTimeout(() => {
+      if (user) {
+        Promise.all([fetchNoOfSub(), mySubscription()])
+          .finally(() => setisLoading(false));
+      }
+    }, 300); 
+    return () => clearTimeout(timer);
+  }, []);
+  
+  if(isLoading ){
+      return (
+        <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
+        {/* Cover Image Skeleton */}
+        <div className="relative min-h-[150px] w-full pt-[16.28%] bg-gray-800 animate-pulse">
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Placeholder for the cover image */}
+          </div>
+        </div>
+  
+        <div className="px-4 pb-4">
+          {/* Channel Metadata Skeleton */}
+          <div className="flex flex-wrap gap-4 pb-4 pt-6">
+            <div className="relative -mt-12 inline-block h-28 w-28 shrink-0 overflow-hidden rounded-full bg-gray-800 animate-pulse"></div>
+            <div className="mr-auto inline-block">
+              <div className="h-5 w-32 bg-gray-800 rounded animate-pulse"></div>
+              <div className="mt-2 h-3 w-24 bg-gray-800 rounded animate-pulse"></div>
+              <div className="mt-2 h-3 w-40 bg-gray-800 rounded animate-pulse"></div>
+            </div>
+            <div className="inline-block">
+              <div className="inline-flex min-w-[145px] justify-end">
+                <div className="h-10 w-32 bg-gray-800 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+  
+          {/* List Options Skeleton */}
+          <ul className="no-scrollbar sticky top-[66px] z-[2] flex flex-row gap-x-2 overflow-auto border-b-2 border-gray-400 bg-[#121212] py-2 sm:top-[82px]">
+            <li className="w-full">
+              <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+            </li>
+            <li className="w-full">
+              <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+            </li>
+            <li className="w-full">
+              <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+            </li>
+            <li className="w-full">
+              <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+            </li>
+          </ul>
+  
+          {/* Outlet Skeleton */}
+          <div className="h-64 w-full bg-gray-800 rounded animate-pulse"></div>
+        </div>
+      </section>
+      )
+  }
 
   return (
     <section className="relative w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
@@ -96,6 +152,7 @@ function MyChannel() {
           <img
             src={user?.coverImage}
             alt="cover-photo"
+            className="w-full h-full object-cover"
           />
         </div>
       </div>

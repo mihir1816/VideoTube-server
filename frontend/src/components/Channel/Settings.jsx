@@ -1,6 +1,6 @@
-import React from "react";
+import React , {useEffect , useState} from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector  } from "react-redux";
 import { selectCurrentUser } from "../../app/Slices/authSlice";
 import { useForm } from "react-hook-form";
 import { axiosInstance } from '../../helpers/axios.helper.js';
@@ -8,8 +8,26 @@ import { toast } from 'react-toastify';
 import { parseErrorMessage } from '../../helpers/parseErrMsg.helper.js';
 
 function Settings() {
-  const user = useSelector(selectCurrentUser);
+  
+  const [user, setUser] = useState(null);
   const { register, handleSubmit, watch } = useForm();
+
+  const getUser = async () => {
+    try {
+      const response = await axiosInstance.get("/api/users/current-user");
+      toast.success("get current user successfully...");
+      setUser(response.data.data);
+      console.log(user) ; 
+    } catch (error) {
+      console.error("BACKEND_ERROR :: GET CURRENT USER");
+      toast.error("Not logged In...😕");
+      throw error;
+    }
+  } 
+  
+
+
+  
 
   const config = {
     headers: {
@@ -23,7 +41,6 @@ function Settings() {
     const formDataCover = new FormData();
     const formDataAvatar = new FormData();
   
-    // If cover image is selected, append it to formData
     if (data.coverImage[0]) {
       formDataCover.append('coverImage', data.coverImage[0]);
   
@@ -37,7 +54,7 @@ function Settings() {
       }
     }
   
-    // If avatar is selected, append it to formData
+
     if (data.avatar[0]) {
       formDataAvatar.append('avatar', data.avatar[0]);
   
@@ -50,7 +67,13 @@ function Settings() {
         console.error('Error in changing avatar:', error);
       }
     }
+    getUser() ; 
+
   };
+
+  useEffect(() => {
+    getUser() ; 
+ }, [])
   
 
   return (

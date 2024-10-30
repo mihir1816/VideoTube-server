@@ -5,8 +5,10 @@ import { axiosInstance } from "../../helpers/axios.helper.js";
 import { parseErrorMessage } from "../../helpers/parseErrMsg.helper.js";
 import { toast } from "react-toastify";
 import { NavLink } from "react-router-dom";
+import DeletePlayList from "./DeletePlayList.jsx";
+import EditPlaylist from './EditPlaylist.jsx'
 
-function PlaylistVideos() {
+function MyPlayListVideo() {
 
   const location = useLocation();
   const pathParts = location.pathname.split('/');
@@ -56,10 +58,10 @@ function PlaylistVideos() {
     try {
       const response = await axiosInstance.get(`/api/playlist/${playlistId}`);
       console.log(response) ; 
-      // toast.success(response.data.message);
+      toast.success(response.data.message);
       setplaylist(response.data.data);
     } catch (error) {
-      // toast.error(parseErrorMessage(error.response.data));
+      toast.error(parseErrorMessage(error.response.data));
     }
   };
 
@@ -68,10 +70,10 @@ function PlaylistVideos() {
     try {
       const response = await axiosInstance.get(`/api/users/c/${username}`);
       console.log(response) ; 
-      // toast.success(response.data.message);
+      toast.success(response.data.message);
       setuser(response.data.data);
     } catch (error) {
-      // toast.error(parseErrorMessage(error.response.data));
+      toast.error(parseErrorMessage(error.response.data));
     }
   };
 
@@ -81,7 +83,7 @@ function PlaylistVideos() {
       const response = await axiosInstance.get(`/api/subscriptions/c/${user?._id}`);
       setNoOfSubscribers(response.data.data.length);
     } catch (error) {
-      // toast.error(parseErrorMessage(error?.response?.data));
+      toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching sub list and count data:", error);
     }
   };
@@ -91,10 +93,10 @@ function PlaylistVideos() {
     try {
       const response = await axiosInstance.get(`/api/playlist/user/allvideos/${playlistId}`);
       console.log(response) ; 
-      // toast.success(response.data.message);
+      toast.success(response.data.message);
       setallVideosOfPlayList(response.data.data.videos);
     } catch (error) {
-      // toast.error(parseErrorMessage(error.response.data));
+      toast.error(parseErrorMessage(error.response.data));
     }
   };
 
@@ -123,129 +125,55 @@ function PlaylistVideos() {
     }
 }, [allVideosOfPlayList]);
 
-if (!playlist || !user || !allVideosOfPlayList) {
-  return (
-    <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
-      <div className="flex flex-wrap gap-x-4 gap-y-10 p-4 xl:flex-nowrap">
-        <div className="w-full shrink-0 sm:max-w-md xl:max-w-sm">
-          <div className="relative mb-2 w-full pt-[56%]">
-            <div className="absolute inset-0">
-              {/* Skeleton for the image */}
-              <div className="h-full w-full bg-white/10 animate-pulse"></div>
-              <div className="absolute inset-x-0 bottom-0 ">
-                <div className="relative border-t border-t-slate-600 bg-white/10 p-4 text-white backdrop-blur-sm before:absolute before:inset-0 before:bg-black/40">
-                  <div className="relative z-[1] ">
-                    {/* Skeleton for the text */}
-                    <div className="h-4 bg-gray-700 rounded w-3/4 mb-2 animate-pulse"></div>
-                    <div className="h-4 bg-gray-700 rounded w-1/2 animate-pulse"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Skeleton for the title */}
-          <div className="h-4 bg-gray-700 rounded w-3/4 mb-1 animate-pulse"></div>
-          {/* Skeleton for the description */}
-          <div className="h-4 bg-gray-700 rounded w-full mb-2 animate-pulse"></div>
-          <div className="mt-6 flex items-center gap-x-3">
-            {/* Skeleton for the avatar */}
-            <div className="h-16 w-16 shrink-0">
-              <div className="h-full w-full bg-gray-700 rounded-full animate-pulse"></div>
-            </div>
-            <div className="w-full">
-              {/* Skeleton for the owner's name and subscribers */}
-              <div className="h-4 bg-gray-700 rounded w-3/4 mb-1 animate-pulse"></div>
-              <div className="h-4 bg-gray-700 rounded w-1/4 animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-        <ul className="flex w-full flex-col gap-y-4">
-          <div className="border border-slate-600">
-            <div className="w-full max-w-3xl gap-x-4 sm:flex">
-              <div className="relative mb-2 w-full sm:mb-0 sm:w-5/12">
-                <div className="w-full pt-[56%]">
-                  <div className="absolute inset-0 bg-gray-700 animate-pulse"></div>
-                </div>
-              </div>
-              <div className="flex gap-x-2 px-2 sm:w-7/12 sm:px-0">
-                <div className="h-10 w-10 shrink-0 sm:hidden bg-gray-700 rounded-full animate-pulse"></div>
-                <div className="w-full">
-                  <div className="my-4 font-semibold sm:max-w-[75%] bg-gray-700 h-4 animate-pulse"></div>
-                  <p className="flex text-sm text-gray-200 sm:mt-3 bg-gray-700 h-4 animate-pulse w-3/4"></p>
-                  <div className="flex items-center gap-x-4 my-4">
-                    <div className="mt-2 hidden h-10 w-10 shrink-0 sm:block bg-gray-700 rounded-full animate-pulse"></div>
-                    <div className="text-sm text-gray-200 bg-gray-700 h-4 animate-pulse w-1/2"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="border border-slate-600">
-            <div className="w-full max-w-3xl gap-x-4 sm:flex">
-              <div className="relative mb-2 w-full sm:mb-0 sm:w-5/12">
-                <div className="w-full pt-[56%]">
-                  <div className="absolute inset-0 bg-gray-700 animate-pulse"></div>
-                </div>
-              </div>
-              <div className="flex gap-x-2 px-2 sm:w-7/12 sm:px-0">
-                <div className="h-10 w-10 shrink-0 sm:hidden bg-gray-700 rounded-full animate-pulse"></div>
-                <div className="w-full">
-                  <div className="my-4 font-semibold sm:max-w-[75%] bg-gray-700 h-4 animate-pulse"></div>
-                  <p className="flex text-sm text-gray-200 sm:mt-3 bg-gray-700 h-4 animate-pulse w-3/4"></p>
-                  <div className="flex items-center gap-x-4 my-4">
-                    <div className="mt-2 hidden h-10 w-10 shrink-0 sm:block bg-gray-700 rounded-full animate-pulse"></div>
-                    <div className="text-sm text-gray-200 bg-gray-700 h-4 animate-pulse w-1/2"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="border border-slate-600">
-            <div className="w-full max-w-3xl gap-x-4 sm:flex">
-              <div className="relative mb-2 w-full sm:mb-0 sm:w-5/12">
-                <div className="w-full pt-[56%]">
-                  <div className="absolute inset-0 bg-gray-700 animate-pulse"></div>
-                </div>
-              </div>
-              <div className="flex gap-x-2 px-2 sm:w-7/12 sm:px-0">
-                <div className="h-10 w-10 shrink-0 sm:hidden bg-gray-700 rounded-full animate-pulse"></div>
-                <div className="w-full">
-                  <div className="my-4 font-semibold sm:max-w-[75%] bg-gray-700 h-4 animate-pulse"></div>
-                  <p className="flex text-sm text-gray-200 sm:mt-3 bg-gray-700 h-4 animate-pulse w-3/4"></p>
-                  <div className="flex items-center gap-x-4 my-4">
-                    <div className="mt-2 hidden h-10 w-10 shrink-0 sm:block bg-gray-700 rounded-full animate-pulse"></div>
-                    <div className="text-sm text-gray-200 bg-gray-700 h-4 animate-pulse w-1/2"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="border border-slate-600">
-            <div className="w-full max-w-3xl gap-x-4 sm:flex">
-              <div className="relative mb-2 w-full sm:mb-0 sm:w-5/12">
-                <div className="w-full pt-[56%]">
-                  <div className="absolute inset-0 bg-gray-700 animate-pulse"></div>
-                </div>
-              </div>
-              <div className="flex gap-x-2 px-2 sm:w-7/12 sm:px-0">
-                <div className="h-10 w-10 shrink-0 sm:hidden bg-gray-700 rounded-full animate-pulse"></div>
-                <div className="w-full">
-                  <div className="my-4 font-semibold sm:max-w-[75%] bg-gray-700 h-4 animate-pulse"></div>
-                  <p className="flex text-sm text-gray-200 sm:mt-3 bg-gray-700 h-4 animate-pulse w-3/4"></p>
-                  <div className="flex items-center gap-x-4 my-4">
-                    <div className="mt-2 hidden h-10 w-10 shrink-0 sm:block bg-gray-700 rounded-full animate-pulse"></div>
-                    <div className="text-sm text-gray-200 bg-gray-700 h-4 animate-pulse w-1/2"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </ul>
-      </div>
-    </section>
-  );
-}
 
+
+const handleDeleteButtonClickVideo = async (videoId) => {
+  try {
+    const response = await axiosInstance.patch(`/api/playlist/remove/${videoId}/${playlistId}`);
+    toast.success(response.data.message);
+    await renderAllVideos();
+  } catch (error) {
+    const errorMessage = error.response
+      ? error.response.data
+      : "Failed to delete video from playlist. Please try again...";
+    toast.error(parseErrorMessage(errorMessage));
+    console.error("Error deleting VIDEO FROM PLAYLIST:", error);
+  }
+};
+
+ // for delete popup
+
+ const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+ const [playListIdToDelete, setplayListIdToDelete] = useState(null);
+
+ const handleDeleteButtonClick = () => {
+  setplayListIdToDelete(playlistId); 
+   setDeleteModalOpen(true);
+ };
+
+ const closeDeleteModal = () => {
+   setDeleteModalOpen(false); 
+   setplayListIdToDelete(null); 
+ };
+
+ // for update popup
+ 
+ const [updateModelOpen, setupdateModelOpen] = useState(false)
+ const [playListIdToUpdate, setPlayListIdToUpdate] = useState(null);
+
+ const handleUpdateButtonClick = () => {
+  setPlayListIdToUpdate(playlistId); 
+   setupdateModelOpen(true);
+ };
+
+ const closeUpdateModal = () => {
+  setPlayListIdToUpdate(null); 
+  setupdateModelOpen(false)
+ };
+
+ const reloadPlaylist = async () => {
+  await renderThisPlayList();
+}
 
   return (
     <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
@@ -287,13 +215,56 @@ if (!playlist || !user || !allVideosOfPlayList) {
               <h6 className="font-semibold">{user?.username}</h6>
               <p className="text-sm text-gray-300">{formatNumber(noOfSubscribers)} Subscribers</p>
             </div>
+            <div className="flex gap-4">
+                      {/* Delete Action */}
+                      <button 
+                      className="h-5 w-5 hover:text-[#ae7aff]"
+                      onClick={ handleDeleteButtonClick}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                          ></path>
+                        </svg>
+                      </button>
+
+                      {/* Edit Action */}
+                      <button className="h-5 w-5 hover:text-[#ae7aff]"
+                      onClick={handleUpdateButtonClick}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+                          ></path>
+                        </svg>
+                      </button>
+                      
+            </div>
           </div>
         </div>  
 
 
         <div className="flex w-full flex-col gap-y-4">
 
-        {Array.isArray(allVideosOfPlayList) && allVideosOfPlayList.map((video) => (
+        {allVideosOfPlayList && allVideosOfPlayList.map((video) => (
         <div key={video?._id} className="border mb-4">
           <div className="w-full max-w-3xl gap-x-4 sm:flex">
             <div className="relative mb-1 w-full sm:mb-0 sm:w-5/12">
@@ -315,13 +286,12 @@ if (!playlist || !user || !allVideosOfPlayList) {
             <div className="flex gap-x-2 px-2 sm:w-7/12 sm:px-0">
            
               <div className="h-10 w-10 shrink-0 sm:hidden">
-              <NavLink to={`/user/${video?.owner?.username}/${video?.owner?._id}`}>
+              
                 <img
                   src={video?.owner?.avatar}
                   alt={video?.owner?.username}
                   className="h-full w-full rounded-full"
                 />
-                 </NavLink>
               </div>
              
               <div className="w-full">
@@ -341,6 +311,25 @@ if (!playlist || !user || !allVideosOfPlayList) {
                   </div>
                   <p className="text-sm text-gray-200">{video?.owner?.username}</p>
                 </div>
+                <button
+                    className="h-5 mt-3 ml-2 w-5 hover:text-[#ae7aff]"
+                    onClick={() => handleDeleteButtonClickVideo(video?._id)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                      ></path>
+                    </svg>
+                  </button>
               </div>
             </div>
           </div>
@@ -348,8 +337,19 @@ if (!playlist || !user || !allVideosOfPlayList) {
       ))}
         </div>
       </div>
+
+      {isDeleteModalOpen && (
+        <DeletePlayList playListId={playListIdToDelete} onClose={closeDeleteModal} 
+        // onUpdateSuccess={reloadPlaylist}
+        />
+      )}
+
+      {
+        updateModelOpen && 
+        <EditPlaylist playListId={playListIdToUpdate} onClose={closeUpdateModal} onUpdateSuccess={reloadPlaylist}/>
+      }
     </section>
   );
 }
 
-export default PlaylistVideos;
+export default MyPlayListVideo;

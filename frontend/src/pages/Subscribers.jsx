@@ -10,15 +10,17 @@ import { NavLink } from "react-router-dom";
 function Subscribers() {
   const [subscriberList, setsubscriberList] = useState(null);
 
+  const [isLoading, setisLoading] = useState(true)
+
   const user = useSelector(selectCurrentUser);
 
   const fetchSubList = async () => {
     try {
       const response = await axiosInstance.get(`/api/subscriptions/c/${user?._id}`);
       setsubscriberList(response.data.data)
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
     } catch (error) {
-      toast.error(parseErrorMessage(error?.response?.data));
+      // toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching sub list and count data:", error);
     }
   };
@@ -26,23 +28,138 @@ function Subscribers() {
   const toggleSub = async (channelId) => {
     try {
       const response = await axiosInstance.post(`/api/subscriptions/t/${channelId}`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       await fetchSubList();
     } catch (error) {
-      toast.error(parseErrorMessage(error?.response?.data));
+      // toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error toggleing subs:", error);
     }
   };
 
   useEffect(() => {
-    if(user){
-      fetchSubList();
-    }
+    const timer = setTimeout(() => {
+      if(user){
+        fetchSubList().finally(() => setisLoading(false));
+      }
+    }, 300); 
+    return () => clearTimeout(timer); 
   }, []); 
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-y-4 pt-1 w-full">
+        <div className="flex flex-col gap-y-5 pt-4">
 
+          <div className="relative mb-2 rounded-sm bg-slate-100/10 animate-pulse py-2 pl-8 pr-3">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"></span>
+            <div className="w-full h-6 bg-transparent outline-none" />
+          </div>
 
-  return !subscriberList ? (
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return Array.isArray(subscriberList) && subscriberList.length === 0 ? (
     <section class="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
       <div className="flex justify-center p-4">
         <div className="w-full max-w-sm text-center">
@@ -99,7 +216,7 @@ function Subscribers() {
             <input className="w-full bg-transparent outline-none" placeholder="Search" />
           </div>
 
-          {subscriberList.map((subscriber) => (
+          {Array.isArray(subscriberList) && subscriberList.map((subscriber) => (
           <div key={subscriber?.subscriberId} className="flex w-full justify-between mb-4">
             <div className="flex items-center gap-x-2">
               <div className="h-14 w-14 shrink-0">

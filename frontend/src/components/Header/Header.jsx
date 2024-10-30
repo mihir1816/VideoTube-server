@@ -1,4 +1,4 @@
-import React , {useEffect} from "react";
+import React , {useEffect , useRef} from "react";
 import { Logo } from "../index";
 import { NavLink, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -13,60 +13,115 @@ function Header() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const searchInputRef = useRef();
+  const smallSearchInputRef = useRef();
+
+  const handleLogout =  () => {
+     dispatch(logout());
     navigate('/') ; 
   };
 
+  function handleSearchQuery(input) {
+    let searchQuery = input.trim();
+    if (!searchQuery) {
+      searchInputRef.current.focus();
+      return;
+    }
+    navigate(`/results?search_query=${searchQuery}`);
+  }
+
   return (
-    <header className="sticky inset-x-0 top-0 z-50 w-full border-b border-white bg-[#121212] px-4">
+    <header className="sticky h-18 inset-x-0 top-0 z-50 w-full border-b border-white bg-[#121212] px-4">
       <nav className="mx-auto flex max-w-7xl items-center py-2">
+
         <Logo />
-        <div className="relative mx-auto hidden w-full max-w-md overflow-hidden sm:block">
-          <input
-            className="w-full border bg-transparent py-1 pl-8 pr-3 placeholder-white outline-none sm:py-2"
-            placeholder="Search"
-          />
-          <span className="absolute left-2.5 top-1/2 inline-block -translate-y-1/2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              aria-hidden="true"
-              className=" h-4 w-4"
+
+        {/* search bar */}
+            <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSearchQuery(searchInputRef.current.value);
+                }}
+                className="hidden items-start w-full max-w-lg mx-auto sm:inline-flex"
+              >
+                <div className="relative w-full max-w-lg overflow-hidden">
+                  <input
+                    ref={searchInputRef}
+                    className="w-full border focus:border-[#ae7aff] bg-transparent py-1 pl-3 pr-2 placeholder-white outline-none sm:py-1.5" 
+                    placeholder="Search"
+                    style={{ fontSize: '0.875rem' }} 
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="border-r border-b border-t rounded-r-xl px-2 py-1 bg-transparent hover:text-[#ae7aff] hover:bg-gray-500/10" 
+                >
+                  <div className="flex items-center" style={{ width: '25px', height: '25px' }}> 
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                      className="w-4 h-4" // Set smaller width and height for the icon
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                      ></path>
+                    </svg>
+                  </div>
+                </button>
+              </form>
+
+        {/* for small devices */}
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSearchQuery(smallSearchInputRef.current.value);
+          }}
+          className="sm:hidden items-start w-full"
+        >
+          <div className="relative w-full max-w-lg overflow-hidden">
+            <input
+              ref={smallSearchInputRef}
+              className="w-full border rounded-r-2xl focus:border-[#ae7aff] bg-transparent py-1 pl-2 pr-3 placeholder-white outline-none"
+              placeholder="Search"
+            />
+            <button
+              type="submit"
+              className="absolute right-2 hover:text-[#ae7aff] top-1/2 inline-block -translate-y-1/2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-              ></path>
-            </svg>
-          </span>
-        </div>
-        <button className="ml-auto sm:hidden">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            aria-hidden="true"
-            className=" h-6 w-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-            ></path>
-          </svg>
-        </button>
+              <div className="flex items-center" style={{ width: '25px', height: '25px' }}> 
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                      className="w-4 h-4" 
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                      ></path>
+                    </svg>
+                  </div>
+            </button>
+          </div>
+        </form>
+        
         <button className="group peer ml-4 flex w-6 shrink-0 flex-wrap gap-y-1.5 sm:hidden">
           <span className="block h-[2px] w-full bg-white group-hover:bg-[#ae7aff]"></span>
           <span className="block h-[2px] w-2/3 bg-white group-hover:bg-[#ae7aff]"></span>
           <span className="block h-[2px] w-full bg-white group-hover:bg-[#ae7aff]"></span>
         </button>
+
+
         <div className="fixed inset-y-0 right-0 flex w-full max-w-xs shrink-0 translate-x-full flex-col border-l border-white bg-[#121212] duration-200 hover:translate-x-0 peer-focus:translate-x-0 sm:static sm:ml-4 sm:w-auto sm:translate-x-0 sm:border-none">
           <div className="relative flex w-full items-center justify-between border-b border-white px-4 py-2 sm:hidden">
             <span className="inline-block w-12">
@@ -147,9 +202,9 @@ function Header() {
               <div className="mb-8 mt-auto flex w-full flex-wrap gap-4 px-4 sm:mb-0 sm:mt-0 sm:items-center sm:px-0">
                   { user.avatar && (
                     <img
-                      src={user.avatar} // Assuming the avatar URL is stored in userData
+                      src={user.avatar} 
                       alt="User Avatar"
-                      className="h-8 w-8 rounded-full mr-2" // Adjust the size and styling as needed
+                      className="h-8 w-8 rounded-full mr-2" 
                     />
                   )} 
                   <button 

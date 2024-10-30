@@ -44,16 +44,69 @@ function Channel() {
   };
 
   useEffect(() => {
-    if (username) {
-      fetchUserData();
-    }
+    const timer = setTimeout(() => {
+      if (username) {
+        fetchUserData();
+      }
+    }, 300); 
+    return () => clearTimeout(timer);
   }, [username]);
+
+  if(!user ){
+    return (
+      <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
+      {/* Cover Image Skeleton */}
+      <div className="relative min-h-[150px] w-full pt-[16.28%] bg-gray-800 animate-pulse">
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Placeholder for the cover image */}
+        </div>
+      </div>
+
+      <div className="px-4 pb-4">
+        {/* Channel Metadata Skeleton */}
+        <div className="flex flex-wrap gap-4 pb-4 pt-6">
+          <div className="relative -mt-12 inline-block h-28 w-28 shrink-0 overflow-hidden rounded-full bg-gray-800 animate-pulse"></div>
+          <div className="mr-auto inline-block">
+            <div className="h-5 w-32 bg-gray-800 rounded animate-pulse"></div>
+            <div className="mt-2 h-3 w-24 bg-gray-800 rounded animate-pulse"></div>
+            <div className="mt-2 h-3 w-40 bg-gray-800 rounded animate-pulse"></div>
+          </div>
+          <div className="inline-block">
+            <div className="inline-flex min-w-[145px] justify-end">
+              <div className="h-10 w-32 bg-gray-800 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* List Options Skeleton */}
+        <ul className="no-scrollbar sticky top-[66px] z-[2] flex flex-row gap-x-2 overflow-auto border-b-2 border-gray-400 bg-[#121212] py-2 sm:top-[82px]">
+          <li className="w-full">
+            <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+          </li>
+          <li className="w-full">
+            <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+          </li>
+          <li className="w-full">
+            <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+          </li>
+          <li className="w-full">
+            <div className="h-10 w-full bg-gray-800 rounded animate-pulse"></div>
+          </li>
+        </ul>
+
+        {/* Outlet Skeleton */}
+        <div className="h-64 w-full bg-gray-800 rounded animate-pulse"></div>
+      </div>
+    </section>
+    )
+}
 
   return (
     <section className="relative w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
       <div className="relative min-h-[150px] w-full pt-[16.28%]">
         <div className="absolute inset-0 overflow-hidden">
-          <img src={user?.coverImage} alt="cover-photo" />
+          <img src={user?.coverImage} alt="cover-photo" 
+          className="w-full h-full object-cover"/>
         </div>
       </div>
       <div className="px-4 pb-4">

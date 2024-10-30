@@ -34,27 +34,10 @@ const userSchema = new Schema(
         } , 
         watchHistory: [
             {
-                _id: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Video",
-                },
-                title: String,
-                description: String,
-                thumbnail: String,
-                views: Number,
-                createdAt: Date,
-                duration : Number , 
-                owner: {
-                    _id: {
-                        type: Schema.Types.ObjectId,
-                        ref: "User", 
-                    },
-                    username: String,
-                    avatar: String,
-                },
+                type: Schema.Types.ObjectId,
+                ref: "Video"
             }
         ],
-         
         password : {
             type : String , 
             required : [true , "password is required"]

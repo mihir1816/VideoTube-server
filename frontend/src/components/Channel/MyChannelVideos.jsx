@@ -14,6 +14,8 @@ import { NavLink } from "react-router-dom";
 function MyChannelVideos() {
 
   const user = useSelector(selectCurrentUser);
+  const [isLoading, setisLoading] = useState(true)
+
 
 
   const [videos, setVideos] = useState(null);
@@ -55,18 +57,17 @@ function MyChannelVideos() {
         return num.toString(); // Less than 1000, return as is
     }
   }
-
+  
   
   const addToHistory = async (videoId) => {
     try {
       const response = await axiosInstance.post(`/api/users/addVideoToWatchHistory`, { videoId });
-       toast.success(response.data.message);
+      //  toast.success(response.data.message);
     } catch (error) {
-      toast.error(parseErrorMessage(error.response.data));
+      // toast.error(parseErrorMessage(error.response.data));
       console.error("video is not added to watchhistory  :", error);
     }
   };
-
 
   const addview = async (videoId) => {
     try {
@@ -74,31 +75,71 @@ function MyChannelVideos() {
       // toast.success(response.data.message);
     } catch (error) {
       const errorMessage = error.response ? error.response.data : "can not add view. Please try again...";
-      toast.error(parseErrorMessage(errorMessage));
+      // toast.error(parseErrorMessage(errorMessage));
       console.error('Error add view :', error);
     }
 };
   
+const renderVideo = async () => {
+  try {
+    const response = await axiosInstance.get(`/api/videos/allVideosOfUser/${user?._id}`); 
+    // toast.success(response.data.message); 
+    console.log(response); 
+    setVideos(response.data.data.result) ; 
+  } catch (error) {
+    // toast.error(parseErrorMessage(error.response.data));
+    // setError(error.message || "Failed to fetch videos. Please try again...");
+    console.error("getAllVideos dispatch error:", error);
+}
+};
 
   useEffect(() => {
-    const renderVideo = async () => {
-        try {
-          const response = await axiosInstance.get(`/api/videos/allVideosOfUser/${user?._id}`); 
-          toast.success(response.data.message); 
-          console.log(response); 
-          setVideos(response.data.data.result) ; 
-        } catch (error) {
-          toast.error(parseErrorMessage(error.response.data));
-          // setError(error.message || "Failed to fetch videos. Please try again...");
-          console.error("getAllVideos dispatch error:", error);
-      }
-    };
-    renderVideo();
+    const timer = setTimeout(() => {
+      renderVideo().finally(() => setisLoading(false));
+    }, 300);
+    return () => clearTimeout(timer); 
   }, []);
 
-
-
-  return !videos ? (
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 pt-4">
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  return Array.isArray(videos) && videos.length === 0 ? (
     <MyChannelEmptyVideo />
   ) : (
     <>

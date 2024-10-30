@@ -11,6 +11,7 @@ import { NavLink } from "react-router-dom";
 function MyChannelSubscribed() {
 
   const user = useSelector(selectCurrentUser);
+  const [isLoading, setisLoading] = useState(true)
 
   const [subscribedChannels, setSubscribedChannels] = useState(null);
  
@@ -26,12 +27,70 @@ function MyChannelSubscribed() {
   };
 
   useEffect(() => {
-    if(user){
-      rendersubscribedChannels();
-    }
+    const timer = setTimeout(() => {
+        if(user){
+          rendersubscribedChannels().finally(() => setisLoading(false));
+        }
+    }, 300);
+    return () => clearTimeout(timer); 
   }, []);
 
-  return !subscribedChannels ? (
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-y-4 pt-1">
+        <div className="flex flex-col gap-y-4 pt-4">
+          <div className="relative mb-2 rounded-sm bg-slate-100/10 animate-pulse py-2 pl-8 pr-3">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"></span>
+            <div className="w-full h-6 bg-transparent outline-none" />
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full justify-between">
+            <div className="flex items-center gap-x-2">
+              <div className="h-14 w-14 shrink-0 bg-slate-100/10 rounded-full animate-pulse"></div>
+              <div className="block">
+                <h6 className="font-semibold mb-2 bg-slate-100/10 animate-pulse h-4 w-24 rounded"></h6>
+                <p className="text-sm text-gray-300 bg-slate-100/10 animate-pulse h-4 w-32 rounded"></p>
+              </div>
+            </div>
+            <div className="block">
+              <div className="group/btn px-3 py-2 text-black bg-slate-100/10 rounded-sm animate-pulse">
+                <span className="inline-block w-24 h-4 rounded"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return Array.isArray(subscribedChannels) && subscribedChannels.length === 0 ? (
     <MyChannelEmptySubscribed />
   ) : (
     <div className="flex flex-col gap-y-4 py-4">
@@ -56,7 +115,7 @@ function MyChannelSubscribed() {
         <input className="w-full bg-transparent outline-none" placeholder="Search" />
       </div>
 
-      {subscribedChannels.map((channel) => (
+      {Array.isArray(subscribedChannels) && subscribedChannels.map((channel) => (
         <div key={channel.channelId} className="flex w-full justify-between mb-4">
           <div className="flex items-center gap-x-2">
             <div className="h-14 w-14 shrink-0">

@@ -205,6 +205,18 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         searchedPlaylist.description = description;
     }
 
+    const thumbnailLocalPath = req.file?.path;
+    if (thumbnailLocalPath) {
+      const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+      if (!thumbnail.url) {
+        throw new ApiError(
+          400,
+          "error while uploading thumbnail on cloudinary during updating thumbnail"
+        );
+      }
+      searchedPlaylist.thumbnail = thumbnail.url;
+    }
+
     await searchedPlaylist.save({
         validationBeforeSave : false 
     })

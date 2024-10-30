@@ -211,10 +211,11 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     try {
       const likedVD = await Like.find({
         likedBy: currentUser,
-        video: { $ne: null } // Ensure only documents with a valid video reference
+        video: { $ne: null } 
       })
       .populate({
-        path: 'video', // Populate the `video` field with the video details
+        path: 'video',
+        match: { isPublished: true }, // Populate the `video` field with the video details
         select: '_id videoFile thumbnail title description duration views createdAt', // Select the video fields you want
         populate: {
           path: 'owner', // Assuming the video schema has an `uploadedBy` field for the user

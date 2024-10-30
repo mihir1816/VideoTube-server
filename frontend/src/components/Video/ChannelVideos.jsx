@@ -7,6 +7,7 @@ import { NavLink } from "react-router-dom";
 
 function ChannelVideos() {
 
+  const [isLoading, setisLoading] = useState(true)
   
   const formatDuration = (duration) => {
     const minutes = Math.floor(duration / 60);
@@ -53,24 +54,68 @@ function ChannelVideos() {
 
   const [videos, setVideos] = useState(null);
 
+  const renderVideo = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/videos/allVideosOfUser/${userId}`); 
+      // toast.success(response.data.message); 
+      console.log(response); 
+      setVideos(response.data.data.result) ; 
+    } catch (error) {
+      // toast.error(parseErrorMessage(error.response.data));
+      // setError(error.message || "Failed to fetch videos. Please try again...");
+      console.error("getAllVideos dispatch error:", error);
+  }
+};
+
+
   useEffect(() => {
-    const renderVideo = async () => {
-        try {
-          const response = await axiosInstance.get(`/api/videos/allVideosOfUser/${userId}`); 
-          toast.success(response.data.message); 
-          console.log(response); 
-          setVideos(response.data.data.result) ; 
-        } catch (error) {
-          toast.error(parseErrorMessage(error.response.data));
-          // setError(error.message || "Failed to fetch videos. Please try again...");
-          console.error("getAllVideos dispatch error:", error);
-      }
-    };
-    renderVideo();
+    const timer = setTimeout(() => {
+      renderVideo().finally(() => setisLoading(false));
+    }, 300);
+    return () => clearTimeout(timer); 
   }, [userId]);
 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 pt-4">
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+        <div className="w-full">
+          <div className="relative mb-2 w-full pt-[56%]">
+            <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+            <span className="absolute bottom-1 right-1 inline-block rounded bg-gray-800 animate-pulse w-16 h-6"></span>
+          </div>
+          <div className="mb-1 font-semibold bg-gray-800 animate-pulse h-6 w-full"></div>
+          <div className="flex text-sm text-gray-200 bg-gray-800 animate-pulse h-4 w-full"></div>
+        </div>
+      </div>
+    );
+  }
 
-  return !videos ? (
+
+  return Array.isArray(videos) && videos.length === 0 ? (
     <EmptyChannelVideo />
   ) : (
     <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">

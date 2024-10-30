@@ -11,23 +11,30 @@ const AboutSection = () => {
     const path = location.pathname.split("/");
     const username = path[2]; 
 
+    const [isLoading, setisLoading] = useState(true)
+
+
     const [user, setuser] = useState(null)
 
-    useEffect(() => {
-        const renderUser = async () => {
-            try {
-              const response = await axiosInstance.get(`/api/users/c/${username}`); 
-              toast.success(response.data.message); 
-              console.log(response); 
-              setuser(response.data.data) ; 
-            } catch (error) {
-              toast.error(parseErrorMessage(error.response.data));
-              // setError(error.message || "Failed to fetch videos. Please try again...");
-              console.error("user fetching error:", error);
-          }
-        };
-        renderUser();
-      }, [username]);
+    const renderUser = async () => {
+      try {
+        const response = await axiosInstance.get(`/api/users/c/${username}`); 
+        // toast.success(response.data.message); 
+        console.log(response); 
+        setuser(response.data.data) ; 
+      } catch (error) {
+        // toast.error(parseErrorMessage(error.response.data));
+        // setError(error.message || "Failed to fetch videos. Please try again...");
+        console.error("user fetching error:", error);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      renderUser().finally(() => setisLoading(false));
+    }, 300);
+    return () => clearTimeout(timer); 
+  }, [username]);
 
   function formatDate(timestamp) {
     const date = new Date(timestamp);
@@ -36,6 +43,45 @@ const AboutSection = () => {
     const year = String(date.getFullYear()).slice(2); // Get last two digits of the year
   
     return `${day}/${month}/${year}`;
+  }
+
+  if (isLoading) {
+    return (
+      <div className=" text-white px-6 py-4 mt-3 rounded-lg shadow-lg text-transparent w-full h-full bg-slate-100/10 animate-pulse">
+        <div className="flex items-center mb-2">
+          <h2 className="text-3xl w-56 h-10 bg-slate-100/10 animate-pulse rounded-lg"></h2>
+        </div>
+
+        <div className="mb-4">
+          <h2 className=" w-1/2 h-6 bg-slate-100/10 animate-pulse rounded-lg"></h2>
+        </div>
+
+        {/* Channel Details */}
+        <div className="mb-6">
+          <div className=" w-40 h-9 mb-3 bg-slate-100/10 animate-pulse rounded-lg"></div>
+          <p className="ml-1 mb-[6px] flex">
+            <div className="font-bold inline-block h-6 w-6 mr-2 bg-slate-100/10 animate-pulse rounded-full"></div>
+            <div className=" w-48 h-6 bg-slate-100/10 animate-pulse rounded-lg"></div>
+          </p>
+          <p className="ml-1 mb-[6px] flex">
+            <div className="font-bold inline-block h-6 w-6 mr-2 bg-slate-100/10 animate-pulse rounded-full"></div>
+            <div className=" w-48 h-6 bg-slate-100/10 animate-pulse rounded-lg"></div>
+          </p>
+          <p className="ml-1 mb-[6px] flex">
+            <div className="font-bold inline-block h-6 w-6 mr-2 bg-slate-100/10 animate-pulse rounded-full"></div>
+            <div className=" w-48 h-6 bg-slate-100/10 animate-pulse rounded-lg"></div>
+          </p>
+          <p className="ml-1 mb-[6px] flex">
+            <div className="font-bold inline-block h-6 w-6 mr-2 bg-slate-100/10 animate-pulse rounded-full"></div>
+            <div className=" w-48 h-6 bg-slate-100/10 animate-pulse rounded-lg"></div>
+          </p>
+          <p className="ml-1 mb-[6px] flex">
+            <div className="font-bold inline-block h-6 w-6 mr-2 bg-slate-100/10 animate-pulse rounded-full"></div>
+            <div className=" w-48 h-6 bg-slate-100/10 animate-pulse rounded-lg"></div>
+          </p>
+        </div>
+      </div>
+    );
   }
 
 

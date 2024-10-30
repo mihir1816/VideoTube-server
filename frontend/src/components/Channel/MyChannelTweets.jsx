@@ -12,6 +12,7 @@ import EditTweet from "../Tweet/EditTweet.jsx";
 function MyChannelTweets() {
   const user = useSelector(selectCurrentUser);
 
+  const [isLoading, setisLoading] = useState(true)
 
   const [tweets, setTweets] = useState(null);
   const [error, setError] = useState(null);
@@ -19,11 +20,11 @@ function MyChannelTweets() {
   const renderTweets = async () => {
     try {
       const response = await axiosInstance.get(`/api/tweets/user/${user?._id}`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       console.log(response);
       setTweets(response.data.data);
     } catch (error) {
-      toast.error(parseErrorMessage(error.response.data));
+      // toast.error(parseErrorMessage(error.response.data));
       setError(error.message || "Failed to fetch videos. Please try again...");
     }
   };
@@ -37,7 +38,7 @@ function MyChannelTweets() {
         const response = await axiosInstance.post("/api/tweets/", {
           content: newtweet,
         });
-        toast.success(response.data.message);
+        // toast.success(response.data.message);
         await renderTweets();
         console.log(response);
         setNewTweet("");
@@ -45,7 +46,7 @@ function MyChannelTweets() {
         const errorMessage = error.response
           ? error.response.data
           : "Failed to post tweet. Please try again...";
-        toast.error(parseErrorMessage(errorMessage));
+        // toast.error(parseErrorMessage(errorMessage));
         console.error("Error posting tweet:", error);
       }
     } else {
@@ -56,36 +57,37 @@ function MyChannelTweets() {
   const handleDeleteButtonClick = async (tweetId) => {
     try {
       const response = await axiosInstance.delete(`/api/tweets/${tweetId}`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       await renderTweets();
     } catch (error) {
       const errorMessage = error.response
         ? error.response.data
         : "Failed to delete tweet. Please try again...";
-      toast.error(parseErrorMessage(errorMessage));
+      // toast.error(parseErrorMessage(errorMessage));
       console.error("Error deleting tweet:", error);
     }
   };
 
-
   const toggleLike = async (tweetId) => {
     try {
       const response = await axiosInstance.post(`/api/likes/toggle/t/${tweetId}`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       await renderTweets();
     } catch (error) {
       const errorMessage = error.response
         ? error.response.data
         : "can not toggle like. Please try again...";
-      toast.error(parseErrorMessage(errorMessage));
+      // toast.error(parseErrorMessage(errorMessage));
       console.error("Error toggling like:", error);
     }
   };
 
 useEffect(() => {
-  renderTweets();
+  const timer = setTimeout(() => {
+    renderTweets().finally(() => setisLoading(false));
+  }, 300); 
+  return () => clearTimeout(timer); 
 }, []);
-
 
 
 const timeSince = (date) => {
@@ -124,10 +126,211 @@ const timeSince = (date) => {
   };
 
   const reloadTweet = async () => {
+    setisLoading(true) ;
     await renderTweets();
+    setisLoading(false) ;   
   }
 
-return !tweets ? (
+  if (isLoading) {
+    return (
+      <section className="w-full py-1 px-3 pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
+        <div className="mt-2 border pb-2 text-transparent bg-slate-100/10 rounded animate-pulse">
+          <div className="mb-2 h-12 w-full resize-none border-none px-3 pt-2"></div>
+
+          <div className="flex items-center justify-end gap-x-3 px-3">
+            <div className="w-20 h-10 bg-slate-100/20 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <hr className=" border-[#ae7aff]/0 animate-pulse my-2" />
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>{" "}
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>{" "}
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>{" "}
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>{" "}
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>{" "}
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>{" "}
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>
+        <div className=" px-1">
+          <div className="flex justify-between ">
+            {/* comment content */}
+            <span className="flex w-full gap-x-4 ">
+              {/* avatar */}
+              <div className="mt-2 h-12 w-12 shrink-0 ">
+                <div className="h-full w-full rounded-full border-white bg-slate-100/10 animate-pulse"></div>
+              </div>
+              {/* Content */}
+              <div className="block w-full">
+                <div className="flex items-center">
+                  <span className="bg-slate-100/10 rounded animate-pulse w-44 h-6 mr-1"></span>
+                  <span className="bg-slate-100/10 rounded animate-pulse w-16 h-6"></span>
+                </div>
+                <div className="bg-slate-100/10 rounded animate-pulse w-32 mt-1 h-4"></div>
+                <p className="my-1 text-[14px]">
+                  <div className="text-transparent h-6 bg-slate-100/10 rounded animate-pulse w-[50%] outline-none border-b-[1px] border-transparent"></div>
+                </p>
+              </div>
+            </span>
+          </div>
+          <hr className="my-2 border-slate-100/50 animate-pulse" />
+        </div>
+      </section>
+    );
+  }
+
+return Array.isArray(tweets) && tweets.length === 0 ? (
   <MyChannelEmptyTweet />
 ) : (
   <>
@@ -150,7 +353,7 @@ return !tweets ? (
       </div>
 
       <div className="w-full py-4">
-        {tweets.map((tweet, index) => (
+        {Array.isArray(tweets) && tweets.map((tweet, index) => (
           <div
             key={index}
             className="flex gap-3 border-b border-gray-700 py-4 ml-0 last:border-b-transparent w-full"

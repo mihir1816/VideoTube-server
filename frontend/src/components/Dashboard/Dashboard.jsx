@@ -9,12 +9,16 @@ import { toast } from "react-toastify";
 import DeleteVideo from "./DeleteVideo.jsx";
 import EditVideo from "./EditVideo.jsx";
 import UploadVideo from "../Channel/UploadVideo.jsx";
+import PleaseLogIn from "../../pages/PleaseLogIn.jsx";
 
 function Dashboard() {
 
   const user = useSelector(selectCurrentUser);
-  // console.log("user lalal")
+  const [isLoading, setisLoading] = useState(true)
+
+  
   console.log(user)
+
   const formatDate = (createdAt) => {
     const date = new Date(createdAt);
     const day = String(date.getDate()).padStart(2, '0');
@@ -68,39 +72,42 @@ function Dashboard() {
 
   // channel data
 
-  const [channelData, setchannelData] = useState({})
+  const [channelData, setchannelData] = useState(null)
 
   const fetchChannelData = async () => {
     try {
       const response = await axiosInstance.get(`/api/dashboard/stats`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       console.log(response) ; 
       setchannelData(response.data.data);
     } catch (error) {
-      toast.error(parseErrorMessage(error?.response?.data));
+      // toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching channel stats:", error);
     }
   };
 
   // videos with likes
 
-  const [videosWithLikes, setvideosWithLikes] = useState([]) ; 
+  const [videosWithLikes, setvideosWithLikes] = useState(null) ; 
   const fetchChannelVideoWithLikeData = async () => {
     try {
       const response = await axiosInstance.get(`/api/dashboard/videos`);
-      toast.success(response.data.message);
+      // toast.success(response.data.message);
       setvideosWithLikes(response.data.data);
     } catch (error) {
-      toast.error(parseErrorMessage(error?.response?.data));
+      // toast.error(parseErrorMessage(error?.response?.data));
       console.error("Error fetching videos with like count:", error);
     }
   };
 
   useEffect(() => {  
-    if(user){
-      fetchChannelData();
-      fetchChannelVideoWithLikeData() ;
-    }
+      const timer = setTimeout(() => {
+        if(user){
+          Promise.all([fetchChannelData(), fetchChannelVideoWithLikeData()])
+          .finally(() => setisLoading(false));
+        }   
+    }, 300); 
+    return () => clearTimeout(timer);
   }, []); 
 
   // for publish status
@@ -117,8 +124,254 @@ function Dashboard() {
   }
 
   const reloadVideos = async () => {
+    setisLoading(true)
     await fetchChannelVideoWithLikeData();
+    setisLoading(false) ; 
   }
+
+  if (!user) {
+    return (
+      <section className="mt-36">
+      <PleaseLogIn />
+      </section>
+    )
+    
+  }
+
+    // Skeleton Effect for loading
+    if (isLoading)
+      return (
+        <h1 className="size-full text-center">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-y-6 px-4 py-8">
+            {/* Wel-Coming header */}
+            <div className="flex flex-wrap justify-between gap-4">
+              {/* Welcoming Headers */}
+              <div className="block">
+                <h1 className=" w-64 h-6 rounded bg-gray-300/65 animate-pulse font-bold"></h1>
+                <p className=" w-96 h-6 mt-2 rounded bg-gray-300/65 animate-pulse"></p>
+              </div>
+              {/* Video Upload Button */}
+              <div className="block">
+                <div className="inline-flex w-36 items-center gap-x-2 bg-gray-300/65 h-12 rounded animate-pulse px-3 py-2 font-semibold text-black"></div>
+              </div>
+            </div>
+            {/* channel States */}
+            <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
+              <div className="border rounded bg-gray-300/10 animate-pulse p-4">
+                <div className="mb-4 block h-16"></div>
+                <h6 className="text-gray-300 h-8"></h6>
+                <p className=" h-8"></p>
+              </div>
+              <div className="border rounded bg-gray-300/10 animate-pulse p-4">
+                <div className="mb-4 block h-16"></div>
+                <h6 className="text-gray-300 h-8"></h6>
+                <p className=" h-8"></p>
+              </div>
+              <div className="border rounded bg-gray-300/10 animate-pulse p-4">
+                <div className="mb-4 block h-16"></div>
+                <h6 className="text-gray-300 h-8"></h6>
+                <p className=" h-8"></p>
+              </div>
+              <div className="border rounded bg-gray-300/10 animate-pulse p-4">
+                <div className="mb-4 block h-16"></div>
+                <h6 className="text-gray-300 h-8"></h6>
+                <p className=" h-8"></p>
+              </div>
+            </div>
+            {/* search bar */}
+            <div className="flex items-start">
+              <div className="relative w-full max-w-2xl overflow-hidden">
+                <input
+                  className="w-full animate-pulse bg-gray-400/10 border py-1 pl-8 pr-3 outline-none sm:py-2"
+                  disabled
+                />
+                <span className="absolute left-2.5 top-1/2 inline-block -translate-y-1/2"></span>
+              </div>
+              <div className=" border-r border-b border-t rounded-r-xl px-3 py-1 animate-pulse bg-gray-400/10">
+                <div className=" size-6 sm:size-8 flex items-center "></div>
+              </div>
+            </div>
+            {/* video Table */}
+            <div className="w-full overflow-auto">
+              <table className="w-full min-w-[1200px] border-collapse border text-white">
+                <thead>
+                  <tr className="h-11">
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                    <th className="border-collapse border-b h-4 w-7 bg-slate-100/5 p-4 animate-pulse"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="group border">
+                    {/* Publish-Unpublished toggle box */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center">
+                        <label className="relative inline-block w-14 cursor-pointer overflow-hidden">
+                          <span className="inline-block border h-7 w-full rounded-2xl bg-gray-200/50 animate-pulse duration-50 mt-2"></span>
+                        </label>
+                      </div>
+                    </td>
+                    {/* Publish-Unpublished label */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center">
+                        <span className="inline-block bg-slate-50/30 animate-pulse duration-50 rounded-2xl w-20 h-8 px-1.5 py-0.5"></span>
+                      </div>
+                    </td>
+  
+                    {/* Thumbnail & Title*/}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex items-center gap-4">
+                        <span className="h-10 w-10 rounded-full bg-slate-50/30 animate-pulse duration-50"></span>
+                        <h3 className=" w-64 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></h3>
+                      </div>
+                    </td>
+  
+                    {/* upload date */}
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-24 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-24 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-10 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    {/* Like-Dislike Count */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center gap-4">
+                        <span className="inline-block w-20 h-8 rounded-xl bg-green-200/50 animate-pulse duration-50 px-1.5 py-0.5"></span>
+                        <span className="inline-block w-20 h-8 rounded-xl bg-red-200/50 animate-pulse duration-50 px-1.5 py-0.5"></span>
+                      </div>
+                    </td>
+  
+                    {/* Video Manipulation*/}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex gap-4">
+                        <div className="h-7 w-7 animate-pulse bg-slate-50/30 duration-50 rounded"></div>
+                        <div className="h-7 w-7 animate-pulse bg-slate-50/30 duration-50 rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr className="group border">
+                    {/* Publish-Unpublished toggle box */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center">
+                        <label className="relative inline-block w-14 cursor-pointer overflow-hidden">
+                          <span className="inline-block border h-7 w-full rounded-2xl bg-gray-200/50 animate-pulse duration-50 mt-2"></span>
+                        </label>
+                      </div>
+                    </td>
+                    {/* Publish-Unpublished label */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center">
+                        <span className="inline-block bg-slate-50/30 animate-pulse duration-50 rounded-2xl w-20 h-8 px-1.5 py-0.5"></span>
+                      </div>
+                    </td>
+  
+                    {/* Thumbnail & Title*/}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex items-center gap-4">
+                        <span className="h-10 w-10 rounded-full bg-slate-50/30 animate-pulse duration-50"></span>
+                        <h3 className=" w-64 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></h3>
+                      </div>
+                    </td>
+  
+                    {/* upload date */}
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-24 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-24 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-10 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    {/* Like-Dislike Count */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center gap-4">
+                        <span className="inline-block w-20 h-8 rounded-xl bg-green-200/50 animate-pulse duration-50 px-1.5 py-0.5"></span>
+                        <span className="inline-block w-20 h-8 rounded-xl bg-red-200/50 animate-pulse duration-50 px-1.5 py-0.5"></span>
+                      </div>
+                    </td>
+  
+                    {/* Video Manipulation*/}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex gap-4">
+                        <div className="h-7 w-7 animate-pulse bg-slate-50/30 duration-50 rounded"></div>
+                        <div className="h-7 w-7 animate-pulse bg-slate-50/30 duration-50 rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr className="group border">
+                    {/* Publish-Unpublished toggle box */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center">
+                        <label className="relative inline-block w-14 cursor-pointer overflow-hidden">
+                          <span className="inline-block border h-7 w-full rounded-2xl bg-gray-200/50 animate-pulse duration-50 mt-2"></span>
+                        </label>
+                      </div>
+                    </td>
+                    {/* Publish-Unpublished label */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center">
+                        <span className="inline-block bg-slate-50/30 animate-pulse duration-50 rounded-2xl w-20 h-8 px-1.5 py-0.5"></span>
+                      </div>
+                    </td>
+  
+                    {/* Thumbnail & Title*/}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex items-center gap-4">
+                        <span className="h-10 w-10 rounded-full bg-slate-50/30 animate-pulse duration-50"></span>
+                        <h3 className=" w-64 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></h3>
+                      </div>
+                    </td>
+  
+                    {/* upload date */}
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-24 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-24 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    <td className="border-collapse text-center border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className=" w-10 h-7 bg-slate-50/30 animate-pulse duration-50 rounded"></div>
+                    </td>
+  
+                    {/* Like-Dislike Count */}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex justify-center gap-4">
+                        <span className="inline-block w-20 h-8 rounded-xl bg-green-200/50 animate-pulse duration-50 px-1.5 py-0.5"></span>
+                        <span className="inline-block w-20 h-8 rounded-xl bg-red-200/50 animate-pulse duration-50 px-1.5 py-0.5"></span>
+                      </div>
+                    </td>
+  
+                    {/* Video Manipulation*/}
+                    <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
+                      <div className="flex gap-4">
+                        <div className="h-7 w-7 animate-pulse bg-slate-50/30 duration-50 rounded"></div>
+                        <div className="h-7 w-7 animate-pulse bg-slate-50/30 duration-50 rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </h1>
+      );
 
 
   return (
@@ -236,7 +489,7 @@ function Dashboard() {
           </thead>
           <tbody>
 
-      {videosWithLikes.map((video, index) => (
+      {Array.isArray(videosWithLikes) && videosWithLikes.map((video, index) => (
                 <tr key={video._id} className="group border">
                   {/* Publish Status */}
                   <td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 function Logo({ width = "w-1" }) {
   return (
     <Link to={"/"}>
-      <div className={`mr-4 ${width} shrink-0 sm:w-16`}>
+      <div className={`mr-4 ${width} shrink-0 sm:w-12`}>
         <svg
           style={{ width: "100%" }}
           viewBox="0 0 63 64"

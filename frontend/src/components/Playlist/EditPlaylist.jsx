@@ -4,18 +4,19 @@ import { parseErrorMessage } from "../../helpers/parseErrMsg.helper";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form"; 
 
-function EditVideo({ videoId, onClose , onUpdateSuccess }) {
+function EditPlaylist({ playListId, onClose , onUpdateSuccess }) {
+
 
  const {
     register, 
-    handleSubmit, 
+    handleSubmit,   
     formState: { errors }, 
   } = useForm();
 
   const updateVideo = async (data) => {
 
     const formData = new FormData();  
-    formData.append("title", data.title);
+    formData.append("name", data.name);
     formData.append("description", data.description);
     if (data.thumbnail[0]) {
         formData.append("thumbnail", data.thumbnail[0]);  
@@ -23,8 +24,8 @@ function EditVideo({ videoId, onClose , onUpdateSuccess }) {
 
     try {
       console.log(data) ;
-      const response = await axiosInstance.patch(`/api/videos/${videoId}`, formData);
-      toast.success(response.data.message);
+      const response = await axiosInstance.patch(`/api/playlist/${playListId}`, formData);
+      toast.success(response.data.message); 
       onClose(); 
       if (onUpdateSuccess) {
         onUpdateSuccess(); 
@@ -42,9 +43,9 @@ function EditVideo({ videoId, onClose , onUpdateSuccess }) {
         <div className="mx-auto w-full max-w-lg overflow-auto rounded-lg border border-gray-700 bg-[#121212] p-4">
           <div className="mb-4 flex items-start justify-between">
             <h2 className="text-xl font-semibold">
-              Edit Video
+              Edit playList
               <span className="block text-sm text-gray-300">
-                Share where you&#x27;ve worked on your profile.
+                Share where you&#x27;ve worked on your playList.
               </span>
             </h2>
             <button className="h-6 w-6"
@@ -70,7 +71,7 @@ function EditVideo({ videoId, onClose , onUpdateSuccess }) {
         <form onSubmit={handleSubmit(updateVideo)}>
             <label for="thumbnail" className="mb-1 inline-block">
               Thumbnail
-              <sup>*</sup>
+              
             </label>
             <label
               className="relative mb-4 block cursor-pointer border border-dashed p-2 after:absolute after:inset-0 after:bg-transparent hover:after:bg-black/10"
@@ -78,7 +79,7 @@ function EditVideo({ videoId, onClose , onUpdateSuccess }) {
             >
               <input type="file" className="sr-only" id="thumbnail"
               {...register("thumbnail")}
-               />
+              />
               <img
                 src="https://images.pexels.com/photos/7775641/pexels-photo-7775641.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                 alt="State Management with Redux"
@@ -87,26 +88,25 @@ function EditVideo({ videoId, onClose , onUpdateSuccess }) {
             <div className="mb-6 flex flex-col gap-y-4">
               <div className="w-full">
                 <label htmlFor="title" className="mb-1 inline-block">
-                  Title
-                  <sup>*</sup>
+                  Name
+                  
                 </label>
                 <input
                   id="title"
                   type="text"
                   className="w-full border bg-transparent px-2 py-1 outline-none"
-                  placeholder="Enter title of the video"
-                {...register("title")}
+                  placeholder="Enter title of the playList"
+                {...register("name")}
                 />
               </div>
               <div className="w-full">
                 <label htmlFor="desc" className="mb-1 inline-block">
                   Description
-                  <sup>*</sup>
                 </label>
                 <textarea
                   id="desc"
                   className="h-40 w-full resize-none border bg-transparent px-2 py-1 outline-none"
-                  placeholder="Enter title of the video"
+                  placeholder="Enter title of the playList"
                   {...register("description")}
                 >
                 </textarea>
@@ -140,4 +140,4 @@ function EditVideo({ videoId, onClose , onUpdateSuccess }) {
   );
 }
 
-export default EditVideo;
+export default EditPlaylist;

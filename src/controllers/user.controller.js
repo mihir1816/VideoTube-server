@@ -432,35 +432,32 @@ const getUserChannelProfile = asyncHandler ( async( req , res )=>{
 } )
 
 
-// error 
-const getWatchHistory = asyncHandler(async (req, res) => {
-    try {
-        console.log("Fetching watch history...");
-        console.log(req.user._id) ; 
 
+const getWatchHistory = async (req, res, next) => {
+    try {
+        
         const user = await User.findById(req.user._id)
             .populate({
-                path: 'watchHistory',  
+                path: 'watchHistory', 
+                match: { isPublished: true },
+                select: 'title description thumbnail duration views createdAt owner', 
                 populate: {
-                    path: 'owner',  
-                    select: 'fullName userName avatar', 
-                },
-                select: 'title description createdAt' 
+                    path: 'owner', 
+                    select: 'username avatar _id' 
+                }
             })
-            .select('watchHistory')
-            .exec(); 
+            .select('watchHistory'); 
 
-            console.log(user) ; 
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
 
+        return res.status(200).json(new ApiResponse(200, user.watchHistory, "Watch history fetched successfully"));
         
-        return res.status(200).json(new ApiResponse(200, user, "Watch history fetched successfully"));
     } catch (error) {
-        console.error("Error fetching watch history:", error);
-        return res.status(500).json(new ApiResponse(500, null, "An error occurred while fetching watch history"));
+        return new ApiError( 500 , error); 
     }
-});
-
-
+};
 
 const addVideoToWatchHistory = asyncHandler(async (req, res) => {
     const { videoId } = req.body;
@@ -470,7 +467,7 @@ const addVideoToWatchHistory = asyncHandler(async (req, res) => {
     }
 
     const isVideoInWatchHistory = req.user?.watchHistory.some(
-        (video) => video._id?.toString() === videoId
+        (id) => id.toString() === videoId
     );
 
     if (isVideoInWatchHistory) {
@@ -479,36 +476,12 @@ const addVideoToWatchHistory = asyncHandler(async (req, res) => {
         );
     }
 
-    const video = await Video.findById(videoId)
-        .populate("owner", "username avatar") 
-        .select("title description thumbnail duration views createdAt owner");
-
-    if (!video) {
-        throw new ApiError(404, "Video not found");
-    }
-
-
-    const videoToAdd = {
-        _id: video._id,
-        title: video.title,
-        description: video.description,
-        thumbnail: video.thumbnail,
-        views: video.views,
-        createdAt: video.createdAt,
-        duration : video.duration , 
-        owner: {
-            _id: video.owner._id,
-            username: video.owner.username,
-            avatar: video.owner.avatar
-        }
-    };
-    
     const user = await User.findByIdAndUpdate(
         req.user._id,
-        { $push: { watchHistory: videoToAdd } },
+        { $push: { watchHistory: videoId } },
         { new: true }
-    ).select("-password"); 
-
+    ).select("-password");
+    
     if (!user) {
         throw new ApiError(400, "Can't find user");
     }

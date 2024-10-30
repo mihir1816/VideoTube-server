@@ -10,11 +10,7 @@ const initialState = {
   userData: null,
 };
 
-// console.log("first")
 export const selectCurrentUser = (state) => {
-// console.log(state.auth.userDa/ta)
-// console.log("authslinjcsndcj")
-
   return state.auth.userData || null; 
 }
 
