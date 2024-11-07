@@ -25,7 +25,10 @@ import playlistRouter from './routs/playlist.routes.js'
 import dashboardRouter from './routs/dashboard.routes.js'
 
 // routes declaration
-app.get('/',(req,res)=>res.send("HELOO"))
+app.get('/',(req,res)=>{
+    console.log("first")
+    return "JKJNJ"
+})
 app.use("/api/v1/users",userRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter) 
 app.use("/api/v1/healthcheck", healthcheckRouter)
