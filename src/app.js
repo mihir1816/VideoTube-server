@@ -25,7 +25,7 @@ import playlistRouter from './routs/playlist.routes.js'
 import dashboardRouter from './routs/dashboard.routes.js'
 
 // routes declaration
-app.get('/', (req, res) => {
+app.get('/okok', (req, res) => {
     console.log("Request received at '/' route");
     res.status(200).send("OK");
 });
